@@ -1,4 +1,4 @@
-git-cleanup
+git-clean
 ===========
 # The Problem
 If you work on one project for a long time, you're bound to amass a lot of
@@ -6,7 +6,7 @@ branches.  Deleting the branches locally gets annoying, and can cost you a lot
 of time in branch grooming, or trying to remember 'that command' to delete all
 merged branches locally.
 
-`git-cleanup` looks to remedy that. By running `git-cleanup`, you'll delete all
+`git-clean` looks to remedy that. By running `git-clean`, you'll delete all
 your merged branches quickly and easily.
 
 # Other implementations
@@ -20,7 +20,7 @@ with tens or hundreds of thousands on commits, it stalls out. I've tried
 several times to get it to work on these larger projects, but I've never been
 able to. It also seems to blow up if the branch is already deleted remotely.
 
-https://github.com/mloughran/git-cleanup
+https://github.com/mloughran/git-clean
 
 This tool takes a slightly different approach, it will show you each branch and
 let you decide what to do with it. This might work great for some people, but I
@@ -54,19 +54,25 @@ don't have it installed, I'm confused as to why you've read this far, but go
 [here]() to download it.
 
 It also assumes that your `git` is properly configured to push and pull from
-the current repository. `git-cleanup` should be run from the directory that
+the current repository. `git-clean` should be run from the directory that
 holds the `.git` directory you care about.
 
 # Use
-## git-cleanup list
-Lists the branches that will be deleted, and where they will be deleted.
+## git-clean
+Lists all the branches to be deleted, and prompts you to confirm:
 ```
-Local     | Remote    | Both
-l\_branch | r\_branch | common
-          |           | other\_common
+The following branches will be deleted locally and remotely:
+branch1
+branch2
+branch3
+Continue? (yN)
 ```
 
-## git-cleanup
+If accepted, it will delete the listed branches both locally and remotely:
+```
+RESULT HERE
+```
+
 Deletes all merged branches, both local and remote.
 ```
 Deleting 20 branches from <repo>
