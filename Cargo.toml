@@ -1,0 +1,7 @@
+[package]
+name = "git-clean"
+version = "0.1.0"
+authors = ["Matt Casper <matthewvcasper@gmail.com>"]
+
+[dependencies]
+getopts = "*"
