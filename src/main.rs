@@ -67,7 +67,6 @@ fn main() {
         _ => return,
     }
 
-    // TODO pass in -l|r options
     match delete_branches(branches, del_opt) {
         Ok(msg) => println!("\n{}", msg),
         Err(msg) => println!("\n{}", msg),
@@ -110,7 +109,7 @@ fn delete_branches(branches: String, options: DeleteOption) -> Result<String, St
         DeleteOption::Both => {
             let out1 = delete_remote_branches(&branches).unwrap();
             let out2 = delete_local_branches(&branches).unwrap();
-            ["Remote:", out1, "Local:", out2].join("\n")
+            ["Remote:".to_owned(), out1, "Local:".to_owned(), out2].join("\n")
         },
     };
 
@@ -139,6 +138,7 @@ fn delete_remote_branches(branches: &String) -> Result<String, String> {
         .args(&["git", "push", "origin", "--delete"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .unwrap_or_else(|e| { panic!("ERR: {}", e) });
 
@@ -146,9 +146,26 @@ fn delete_remote_branches(branches: &String) -> Result<String, String> {
         xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
     }
 
-    let mut s = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut s).unwrap();
-    Ok(s)
+    let mut out = String::new();
+    xargs.stdout.unwrap().read_to_string(&mut out).unwrap();
+
+    let mut err = String::new();
+    xargs.stderr.unwrap().read_to_string(&mut err).unwrap();
+
+    let split = err.split("\n");
+    let vec: Vec<&str> = split.collect();
+    let mut failed_remotes = vec![];
+    for s in vec {
+        if s.contains("error: unable to delete '") {
+            let branch = s.trim_left_matches("error: unable to delete '")
+                .trim_right_matches("': remote ref does not exist");
+
+            failed_remotes.push(branch.to_owned() + " was already deleted in remote.");
+        }
+    };
+    let output = failed_remotes.join("\n") + &out;
+
+    Ok(output)
 }
 
 fn ensure_master() {
