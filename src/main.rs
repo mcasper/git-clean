@@ -1,6 +1,6 @@
 extern crate getopts;
 
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, Child};
 use std::io;
 use std::io::{Read, Write};
 use std::env;
@@ -116,12 +116,7 @@ fn format_columns(branches: &String) -> String {
 }
 
 fn merged_branches() -> String {
-    let grep = Command::new("grep")
-        .args(&["-vE", "(\\* master|\\smaster)"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+    let grep = spawn_piped(vec!["grep", "-vE", "(\\* master|\\smaster)"]);
 
     let gbranch = Command::new("git")
         .args(&["branch", "--merged", "master"])
@@ -154,12 +149,7 @@ fn delete_branches(branches: &String, options: DeleteOption) -> Result<String, S
 }
 
 fn delete_local_branches(branches: &String) -> Result<String, String> {
-    let xargs = Command::new("xargs")
-        .args(&["git", "branch", "-d"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+    let xargs = spawn_piped(vec!["xargs", "git", "branch", "-d"]);
 
     {
         xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
@@ -171,13 +161,7 @@ fn delete_local_branches(branches: &String) -> Result<String, String> {
 }
 
 fn delete_remote_branches(branches: &String) -> Result<String, String> {
-    let xargs = Command::new("xargs")
-        .args(&["git", "push", "origin", "--delete"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+    let xargs = spawn_piped(vec!["xargs", "git", "push", "origin", "--delete"]);
 
     {
         xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
@@ -225,12 +209,26 @@ fn trim_entries(entries: String) -> String {
     trimmed_vec.join("\n").trim_right_matches("\n").to_owned()
 }
 
+fn spawn_piped(args: Vec<&'static str>) -> Child {
+    let cmd = args[0];
+    Command::new(cmd)
+        .args(&args[1..])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap_or_else(|e| { panic!("ERR: {}", e) })
+}
+
 #[cfg(test)]
 mod test {
     use super::trim_entries;
     use super::format_columns;
     use super::print_warning;
     use super::DeleteOption;
+    use super::spawn_piped;
+
+    use std::io::{Read, Write};
 
     use getopts::{Options};
 
@@ -326,6 +324,20 @@ mod test {
             DeleteOption::Both => (),
             other @ _ => panic!("Expected a DeleteOption::Both, but found: {:?}", other),
         };
+    }
+
+    #[test]
+    fn test_spawn_piped() {
+        let echo = spawn_piped(vec!["grep", "foo"]);
+
+        {
+            echo.stdin.unwrap().write_all("foo\nbar\nbaz".as_bytes()).unwrap()
+        }
+
+        let mut stdout = String::new();
+        echo.stdout.unwrap().read_to_string(&mut stdout).unwrap();
+
+        assert_eq!(stdout, "foo\n");
     }
 
     #[test]
