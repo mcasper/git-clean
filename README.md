@@ -57,6 +57,11 @@ It also assumes that your `git` is properly configured to push and pull from
 the current repository. `git-clean` should be run from the directory that
 holds the `.git` directory you care about.
 
+This tool will run the commands `git branch`, `git rev-parse`, and `git push`
+on your system.  `git push will only ever be run as `git push origin --delete
+'remote_branch'`, when deleting remote branches for you. If that isn't
+acceptable, use the `-l` flag to only delete branches locally.
+
 # Use
 ## git-clean
 Lists all the branches to be deleted, and prompts you to confirm:
