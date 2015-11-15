@@ -106,13 +106,14 @@ fn format_columns(branches: &String) -> String {
 
     let col_count = vec.len() / 50 + 1;
     let mut spacer = String::new();
-    for _ in (1..35) {
+    for _ in (0..35) {
         spacer = spacer + " "
     }
 
-    // let rows = vec.iter().slice(3).map(|b1, b2, b3| b1 + spacer + b2 + spacer + b3).collect();
-    // rows.join("\n")
-    String::new()
+    let rows = vec.chunks(col_count)
+        .map(|chunk| chunk.join(&spacer)).collect::<Vec<String>>();
+
+    rows.join("\n").trim().to_owned()
 }
 
 fn merged_branches() -> String {
@@ -242,35 +243,100 @@ mod test {
     #[test]
     fn test_format_columns() {
         let mut input = String::new();
-        for _ in (1..51) {
+        for _ in (0..49) {
             input = input + "branch\n"
         }
 
-        let expected = "branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch                                   branch\
-                        branch";
+        let expected =
+"\
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+branch
+\
+";
+
+        assert_eq!(expected, format_columns(&input));
+
+        let mut input = String::new();
+        for _ in (0..51) {
+            input = input + "branch\n"
+        }
+
+        let expected =
+"\
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch                                   branch
+branch\
+";
 
         assert_eq!(expected, format_columns(&input));
     }
