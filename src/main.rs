@@ -1,6 +1,5 @@
 extern crate getopts;
 
-use std::process::{Command, Stdio, Child};
 use std::io;
 use std::io::{Read, Write};
 use std::env;
@@ -9,9 +8,11 @@ use getopts::{Options};
 
 mod options;
 mod branches;
+mod commands;
 
 use options::{DeleteOption, GitOptions};
 use branches::{Branches};
+use commands::{spawn_piped, run_command, delete_local_branches, delete_remote_branches};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -90,10 +91,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     let regex = "(\\* ".to_owned() + base_branch + "|\\s" + base_branch + ")";
     let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
-    let gbranch = Command::new("git")
-        .args(&["branch", "--merged", base_branch])
-        .output()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+    let gbranch = run_command(vec!["git", "branch", "--merged", base_branch]);
 
     {
         grep.stdin.unwrap().write_all(&gbranch.stdout).unwrap();
@@ -119,81 +117,15 @@ fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &Git
     Ok(output)
 }
 
-fn delete_local_branches(branches: &String) -> String {
-    let xargs = spawn_piped(vec!["xargs", "git", "branch", "-d"]);
-
-    {
-        xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
-    }
-
-    let mut s = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut s).unwrap();
-    s
-}
-
-fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> String {
-    let xargs = spawn_piped(vec!["xargs", "git", "push", &git_options.remote, "--delete"]);
-
-    {
-        xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
-    }
-
-    let mut stdout = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut stdout).unwrap();
-
-    let mut stderr = String::new();
-    xargs.stderr.unwrap().read_to_string(&mut stderr).unwrap();
-
-    let split = stderr.split("\n");
-    let vec: Vec<&str> = split.collect();
-    let mut failed_remotes = vec![];
-    for s in vec {
-        if s.contains("error: unable to delete '") {
-            let branch = s.trim_left_matches("error: unable to delete '")
-                .trim_right_matches("': remote ref does not exist");
-
-            failed_remotes.push(branch.to_owned() + " was already deleted in the remote.");
-        }
-    };
-    failed_remotes.join("\n") + &stdout
-}
-
-fn spawn_piped(args: Vec<&str>) -> Child {
-    let cmd = args[0];
-    Command::new(cmd)
-        .args(&args[1..])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) })
-}
-
 #[cfg(test)]
 mod test {
     use options::{DeleteOption};
     use branches::Branches;
 
-    use super::{print_warning, spawn_piped};
-
-    use std::io::{Read, Write};
+    use super::print_warning;
 
     #[test]
     fn test_print_warning() {
         print_warning(&Branches::new(&"branch".to_owned()), &DeleteOption::Both);
-    }
-
-    #[test]
-    fn test_spawn_piped() {
-        let echo = spawn_piped(vec!["grep", "foo"]);
-
-        {
-            echo.stdin.unwrap().write_all("foo\nbar\nbaz".as_bytes()).unwrap()
-        }
-
-        let mut stdout = String::new();
-        echo.stdout.unwrap().read_to_string(&mut stdout).unwrap();
-
-        assert_eq!(stdout, "foo\n");
     }
 }
