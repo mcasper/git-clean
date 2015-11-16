@@ -107,11 +107,11 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
 fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> Result<String, String> {
     let output = match options {
-        DeleteOption::Local => delete_local_branches(&branches.string).unwrap(),
-        DeleteOption::Remote => delete_remote_branches(&branches.string, git_options).unwrap(),
+        DeleteOption::Local => delete_local_branches(&branches.string),
+        DeleteOption::Remote => delete_remote_branches(&branches.string, git_options),
         DeleteOption::Both => {
-            let out1 = delete_remote_branches(&branches.string, git_options).unwrap();
-            let out2 = delete_local_branches(&branches.string).unwrap();
+            let out1 = delete_remote_branches(&branches.string, git_options);
+            let out2 = delete_local_branches(&branches.string);
             ["Remote:".to_owned(), out1, "Local:".to_owned(), out2].join("\n")
         },
     };
@@ -119,7 +119,7 @@ fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &Git
     Ok(output)
 }
 
-fn delete_local_branches(branches: &String) -> Result<String, String> {
+fn delete_local_branches(branches: &String) -> String {
     let xargs = spawn_piped(vec!["xargs", "git", "branch", "-d"]);
 
     {
@@ -128,10 +128,10 @@ fn delete_local_branches(branches: &String) -> Result<String, String> {
 
     let mut s = String::new();
     xargs.stdout.unwrap().read_to_string(&mut s).unwrap();
-    Ok(s)
+    s
 }
 
-fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> Result<String, String> {
+fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> String {
     let xargs = spawn_piped(vec!["xargs", "git", "push", &git_options.remote, "--delete"]);
 
     {
@@ -155,9 +155,7 @@ fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> Result
             failed_remotes.push(branch.to_owned() + " was already deleted in the remote.");
         }
     };
-    let output = failed_remotes.join("\n") + &stdout;
-
-    Ok(output)
+    failed_remotes.join("\n") + &stdout
 }
 
 fn spawn_piped(args: Vec<&str>) -> Child {

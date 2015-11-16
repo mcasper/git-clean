@@ -1,10 +1,10 @@
 git-clean
 ===========
 # The Problem
-If you work on one project for a long time, you're bound to amass a lot of
-branches.  Deleting the branches locally gets annoying, and can cost you a lot
-of time in branch grooming, or trying to remember 'that command' to delete all
-merged branches locally.
+If you work on one project for a long time, you're bound to amass a good number
+of branches.  Deleting the branches locally whenever you're done with them gets
+annoying, and can cost you a lot of time in branch grooming, or trying to
+remember 'that command' to delete all merged branches locally.
 
 `git-clean` looks to remedy that. By running `git-clean`, you'll delete all
 your merged branches quickly and easily.
@@ -16,22 +16,26 @@ me in some way.
 https://github.com/arc90/git-sweep
 
 This tool works great for smaller projects, but if you work on a large project
-with tens or hundreds of thousands on commits, it stalls out. I've tried
-several times to get it to work on these larger projects, but I've never been
-able to. It also seems to blow up if the branch is already deleted remotely.
+with tens or hundreds of thousands of commits, and thousands of active
+branches, it stalls out. I've tried several times to get it to work on these
+larger projects, but I've never been able to. It also has troubles deleting
+branches locally if they've already been deleted in the remote.
 
 https://github.com/mloughran/git-clean
 
-This tool takes a slightly different approach, it will show you each branch and
-let you decide what to do with it. This might work great for some people, but I
-usually end up cleaning out my branches when the output of `git branch` becomes
-unmanagable, so I would rather batch delete all my merged branches than walk
-through them one by one.
+This tool takes a slightly different approach, it will show you each branch
+sequentially and let you decide what to do with it. This might work great for
+some people, but I usually end up cleaning out my branches when the output of
+`git branch` becomes unmanagable, so I would rather batch delete all my merged
+branches in one go.
 
 https://github.com/dstnbrkr/git-trim
 
-Only does local projects, and requires editing. Does not focus on branches
-merged into master.
+This tool does something reminiscent of interactive rebasing, it will display
+*all* of your branches in your text editor, let you choose which ones you want
+to delete, and deletes them upon saving.  My problems with this are: It's a
+manual process - and, - It doesn't only display merged branches, meaning that
+you could delete branches that have valuable work on it.
 
 # Advantages to this project
 - Fast
@@ -45,11 +49,17 @@ It deletes your branches in bulk
 
 - Deletes local and remote
 
-It deletes both local and remote branches, and handles if the remote is already
-deleted
+It deletes both local and remote branches, and handles the errors if the remote
+is already deleted
+
+- Only presents merged branches
+
+There's no possibly of deleting branches with valuable work on it, as it only
+deletes branches that are even with the base branch you specify (default
+master)
 
 # Assumptions
-This tool assumes that you have `git` installed, and is on your path. If you
+This tool assumes that you have `git` installed, and is in your path. If you
 don't have it installed, I'm confused as to why you've read this far, but go
 [here]() to download it.
 
@@ -57,9 +67,9 @@ It also assumes that your `git` is properly configured to push and pull from
 the current repository. `git-clean` should be run from the directory that
 holds the `.git` directory you care about.
 
-This tool will run the commands `git branch`, `git rev-parse`, and `git push`
-on your system.  `git push will only ever be run as `git push origin --delete
-'remote_branch'`, when deleting remote branches for you. If that isn't
+This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
+`git push` on your system.  `git push will only ever be run as `git push origin
+--delete 'remote_branch'`, when deleting remote branches for you. If that isn't
 acceptable, use the `-l` flag to only delete branches locally.
 
 # Use
@@ -78,18 +88,11 @@ If accepted, it will delete the listed branches both locally and remotely:
 RESULT HERE
 ```
 
-Deletes all merged branches, both local and remote.
-```
-Deleting 20 branches from <repo>
-Progress: [#######     ] 9/20
-Successfully deleted these branches:
-l_branch
-r_branch
-common
-```
+It also offers serveral options for tweaking what branches get deleted, where.
 
-It also offers the `--local` and `--remote` flags. These do exactly what you
-think, they'll only delete local branches or remote branches respectively.
+* `-l` and `-r` toggle deleting branches only locally or only remotely
+* `-R` changes the git remote that remote branches are deleted in
+* `-b` changes the base branch for finding merged branches to delete
 
 # Contributions
-PRs welcome!
+PRs and issues welcome!
