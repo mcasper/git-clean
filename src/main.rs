@@ -5,90 +5,13 @@ use std::io;
 use std::io::{Read, Write};
 use std::env;
 
-use getopts::{Options, Matches};
+use getopts::{Options};
 
-enum DeleteOption {
-    Local,
-    Remote,
-    Both,
-}
+mod options;
+mod branches;
 
-impl DeleteOption {
-    fn new(opts: Matches) -> DeleteOption {
-        return if opts.opt_present("l") {
-            DeleteOption::Local
-        } else if opts.opt_present("r") {
-            DeleteOption::Remote
-        } else {
-            DeleteOption::Both
-        };
-    }
-
-    fn warning_message(&self) -> String {
-        let source = match self {
-            &DeleteOption::Local => "locally:",
-            &DeleteOption::Remote => "remotely:",
-            &DeleteOption::Both => "locally and remotely:",
-        };
-        "The following branches will be deleted ".to_owned() + source
-    }
-}
-
-struct Branches {
-    string: String,
-    vec: Vec<String>
-}
-
-impl Branches {
-    fn new(branches: &String) -> Branches {
-        let split = branches.split("\n");
-        let vec: Vec<&str> = split.collect();
-        let trimmed_vec: Vec<String> = vec.iter().map(|s| s.trim().to_owned()).collect();
-        let trimmed_string = trimmed_vec.join("\n").trim_right_matches("\n").to_owned();
-
-        Branches {
-            string: trimmed_string,
-            vec: trimmed_vec,
-        }
-    }
-
-    fn format_columns(&self) -> String {
-        if self.vec.len() < 51 {
-            return self.string.clone();
-        }
-
-        let col_count = self.vec.len() / 50 + 1;
-        let spacer = "                                   ";
-
-        let rows = self.vec.chunks(col_count)
-            .map(|chunk| chunk.join(spacer)).collect::<Vec<String>>();
-
-        rows.join("\n").trim().to_owned()
-    }
-}
-
-struct GitOptions {
-    remote: String,
-    base_branch: String
-}
-
-impl GitOptions {
-    fn new(opts: &Matches) -> GitOptions {
-        let remote = match opts.opt_str("R") {
-            Some(remote) => remote,
-            None => "origin".to_owned(),
-        };
-        let base_branch = match opts.opt_str("b") {
-            Some(branch) => branch,
-            None => "master".to_owned(),
-        };
-
-        GitOptions {
-            remote: remote,
-            base_branch: base_branch,
-        }
-    }
-}
+use options::{DeleteOption, GitOptions};
+use branches::{Branches};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -258,173 +181,16 @@ fn spawn_piped(args: Vec<&str>) -> Child {
 
 #[cfg(test)]
 mod test {
-    use super::trim_entries;
-    use super::format_columns;
-    use super::print_warning;
-    use super::DeleteOption;
-    use super::spawn_piped;
+    use options::{DeleteOption};
+    use branches::Branches;
+
+    use super::{print_warning, spawn_piped};
 
     use std::io::{Read, Write};
 
-    use getopts::{Options};
-
-    #[test]
-    fn test_trim_entries() {
-        assert_eq!("branch", trim_entries(" branch ".to_owned()));
-        assert_eq!("branch", trim_entries(" branch\n".to_owned()));
-        assert_eq!("branch1\nbranch2\nbranch3", trim_entries(" branch1 \n branch2 \n branch3 ".to_owned()));
-    }
-
-    #[test]
-    fn test_format_columns() {
-        let mut input = String::new();
-        for _ in (0..49) {
-            input = input + "branch\n"
-        }
-
-        let expected =
-"\
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-branch
-\
-";
-
-        assert_eq!(expected, format_columns(&input));
-
-        let mut input = String::new();
-        for _ in (0..51) {
-            input = input + "branch\n"
-        }
-
-        let expected =
-"\
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch                                   branch
-branch\
-";
-
-        assert_eq!(expected, format_columns(&input));
-    }
-
     #[test]
     fn test_print_warning() {
-        print_warning(&"branch".to_owned(), &DeleteOption::Both);
-    }
-
-    #[test]
-    fn test_delete_option_new() {
-        let mut opts = Options::new();
-        opts.optflag("l", "local", "only delete local branches");
-        opts.optflag("r", "remote", "only delete remote branches");
-        opts.optflag("h", "help", "print this help menu");
-
-        // opts throws away the first elem, because it expects it to be the
-        // path of the executable
-        let args = vec!["./target/debug/git-clean", "-l"];
-
-        let matches = match opts.parse(&args[1..]) {
-            Ok(m) => { m }
-            Err(_) => { return }
-        };
-
-        match DeleteOption::new(matches) {
-            DeleteOption::Local => (),
-            other @ _ => panic!("Expected a DeleteOption::Local, but found: {:?}", other),
-        };
-
-        let args = vec!["./target/debug/git-clean", "-r"];
-
-        let matches = match opts.parse(&args[1..]) {
-            Ok(m) => { m }
-            Err(_) => { return }
-        };
-
-        match DeleteOption::new(matches) {
-            DeleteOption::Remote => (),
-            other @ _ => panic!("Expected a DeleteOption::Remote, but found: {:?}", other),
-        };
-
-        let args = vec!["./target/debug/git-clean"];
-
-        let matches = match opts.parse(&args[1..]) {
-            Ok(m) => { m }
-            Err(_) => { return }
-        };
-
-        match DeleteOption::new(matches) {
-            DeleteOption::Both => (),
-            other @ _ => panic!("Expected a DeleteOption::Both, but found: {:?}", other),
-        };
+        print_warning(&Branches::new(&"branch".to_owned()), &DeleteOption::Both);
     }
 
     #[test]
@@ -439,12 +205,5 @@ branch\
         echo.stdout.unwrap().read_to_string(&mut stdout).unwrap();
 
         assert_eq!(stdout, "foo\n");
-    }
-
-    #[test]
-    fn test_warning_message() {
-        assert_eq!("The following branches will be deleted locally:", DeleteOption::Local.warning_message());
-        assert_eq!("The following branches will be deleted remotely:", DeleteOption::Remote.warning_message());
-        assert_eq!("The following branches will be deleted locally and remotely:", DeleteOption::Both.warning_message());
     }
 }
