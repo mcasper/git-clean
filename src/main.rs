@@ -7,11 +7,10 @@ use std::env;
 
 use getopts::{Options, Matches};
 
-#[derive(Debug)]
 enum DeleteOption {
     Local,
     Remote,
-    Both
+    Both,
 }
 
 impl DeleteOption {
@@ -35,12 +34,70 @@ impl DeleteOption {
     }
 }
 
+struct Branches {
+    string: String,
+    vec: Vec<String>
+}
+
+impl Branches {
+    fn new(branches: &String) -> Branches {
+        let split = branches.split("\n");
+        let vec: Vec<&str> = split.collect();
+        let trimmed_vec: Vec<String> = vec.iter().map(|s| s.trim().to_owned()).collect();
+        let trimmed_string = trimmed_vec.join("\n").trim_right_matches("\n").to_owned();
+
+        Branches {
+            string: trimmed_string,
+            vec: trimmed_vec,
+        }
+    }
+
+    fn format_columns(&self) -> String {
+        if self.vec.len() < 51 {
+            return self.string.clone();
+        }
+
+        let col_count = self.vec.len() / 50 + 1;
+        let spacer = "                                   ";
+
+        let rows = self.vec.chunks(col_count)
+            .map(|chunk| chunk.join(spacer)).collect::<Vec<String>>();
+
+        rows.join("\n").trim().to_owned()
+    }
+}
+
+struct GitOptions {
+    remote: String,
+    base_branch: String
+}
+
+impl GitOptions {
+    fn new(opts: &Matches) -> GitOptions {
+        let remote = match opts.opt_str("R") {
+            Some(remote) => remote,
+            None => "origin".to_owned(),
+        };
+        let base_branch = match opts.opt_str("b") {
+            Some(branch) => branch,
+            None => "master".to_owned(),
+        };
+
+        GitOptions {
+            remote: remote,
+            base_branch: base_branch,
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut opts = Options::new();
-    opts.optflag("l", "local", "only delete local branches");
-    opts.optflag("r", "remote", "only delete remote branches");
+    opts.optflag("l", "locals", "only delete local branches");
+    opts.optflag("r", "remotes", "only delete remote branches");
+    opts.optopt("R", "", "changes the git remote used (default is origin)", "REMOTE");
+    opts.optopt("b", "", "changes the base for merged branches (default is master)", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -57,10 +114,12 @@ fn main() {
         return;
     }
 
-    let branches = merged_branches();
+    let git_options = GitOptions::new(&matches);
+
+    let branches = merged_branches(&git_options);
 
     // Early return if there's nothing to delete
-    if branches.len() == 0 {
+    if branches.string.len() == 0 {
         println!("No branches to delete, you're clean!");
         return;
     }
@@ -69,6 +128,7 @@ fn main() {
 
     print_warning(&branches, &del_opt);
 
+    // Read the user's response on continuing
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
 
@@ -78,49 +138,32 @@ fn main() {
         _ => return,
     }
 
-    match delete_branches(&branches, del_opt) {
+    ensure_base_branch(&git_options);
+
+    match delete_branches(&branches, del_opt, &git_options) {
         Ok(ref msg) => println!("\n{}", msg),
         Err(ref msg) => println!("\n{}", msg),
     }
 }
 
 fn print_usage(opts: Options) {
-    let brief = format!("Usage: git-clean [options]");
-    print!("{}", opts.usage(&brief));
+    print!("{}", opts.usage("Usage: git-clean [options]"));
 }
 
-fn print_warning(branches: &String, del_opt: &DeleteOption) {
+fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
     println!("{}", del_opt.warning_message());
-    println!("{}", format_columns(branches));
+    println!("{}", branches.format_columns());
     print!("Continue? (yN) ");
     io::stdout().flush().unwrap();
 }
 
-fn format_columns(branches: &String) -> String {
-    let split = branches.split("\n");
-    let vec: Vec<&str> = split.collect();
-
-    if vec.len() < 51 {
-        return branches.to_owned();
-    }
-
-    let col_count = vec.len() / 50 + 1;
-    let mut spacer = String::new();
-    for _ in (0..35) {
-        spacer = spacer + " "
-    }
-
-    let rows = vec.chunks(col_count)
-        .map(|chunk| chunk.join(&spacer)).collect::<Vec<String>>();
-
-    rows.join("\n").trim().to_owned()
-}
-
-fn merged_branches() -> String {
-    let grep = spawn_piped(vec!["grep", "-vE", "(\\* master|\\smaster)"]);
+fn merged_branches(git_options: &GitOptions) -> Branches {
+    let base_branch = &git_options.base_branch;
+    let regex = "(\\* ".to_owned() + base_branch + "|\\s" + base_branch + ")";
+    let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
     let gbranch = Command::new("git")
-        .args(&["branch", "--merged", "master"])
+        .args(&["branch", "--merged", base_branch])
         .output()
         .unwrap_or_else(|e| { panic!("ERR: {}", e) });
 
@@ -130,18 +173,17 @@ fn merged_branches() -> String {
 
     let mut s = String::new();
     grep.stdout.unwrap().read_to_string(&mut s).unwrap();
-    trim_entries(s)
+
+    Branches::new(&s)
 }
 
-fn delete_branches(branches: &String, options: DeleteOption) -> Result<String, String> {
-    ensure_master();
-
+fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> Result<String, String> {
     let output = match options {
-        DeleteOption::Local => delete_local_branches(branches).unwrap(),
-        DeleteOption::Remote => delete_remote_branches(branches).unwrap(),
+        DeleteOption::Local => delete_local_branches(&branches.string).unwrap(),
+        DeleteOption::Remote => delete_remote_branches(&branches.string, git_options).unwrap(),
         DeleteOption::Both => {
-            let out1 = delete_remote_branches(branches).unwrap();
-            let out2 = delete_local_branches(branches).unwrap();
+            let out1 = delete_remote_branches(&branches.string, git_options).unwrap();
+            let out2 = delete_local_branches(&branches.string).unwrap();
             ["Remote:".to_owned(), out1, "Local:".to_owned(), out2].join("\n")
         },
     };
@@ -161,8 +203,8 @@ fn delete_local_branches(branches: &String) -> Result<String, String> {
     Ok(s)
 }
 
-fn delete_remote_branches(branches: &String) -> Result<String, String> {
-    let xargs = spawn_piped(vec!["xargs", "git", "push", "origin", "--delete"]);
+fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> Result<String, String> {
+    let xargs = spawn_piped(vec!["xargs", "git", "push", &git_options.remote, "--delete"]);
 
     {
         xargs.stdin.unwrap().write_all(branches.as_bytes()).unwrap()
@@ -190,7 +232,7 @@ fn delete_remote_branches(branches: &String) -> Result<String, String> {
     Ok(output)
 }
 
-fn ensure_master() {
+fn ensure_base_branch(git_options: &GitOptions) {
     let current_branch_command = Command::new("git")
         .args(&["rev-parse", "--abbrev-ref", "HEAD"])
         .output()
@@ -198,19 +240,12 @@ fn ensure_master() {
 
     let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
 
-    if current_branch.trim() != "master" {
-        panic!("Please run this command from the master branch");
+    if current_branch.trim() != git_options.base_branch {
+        panic!("Please run this command from the branch: ".to_owned() + &git_options.base_branch);
     }
 }
 
-fn trim_entries(entries: String) -> String {
-    let split = entries.split("\n");
-    let vec: Vec<&str> = split.collect();
-    let trimmed_vec: Vec<&str> = vec.iter().map(|s| s.trim()).collect();
-    trimmed_vec.join("\n").trim_right_matches("\n").to_owned()
-}
-
-fn spawn_piped(args: Vec<&'static str>) -> Child {
+fn spawn_piped(args: Vec<&str>) -> Child {
     let cmd = args[0];
     Command::new(cmd)
         .args(&args[1..])
