@@ -1,4 +1,7 @@
-pub use getopts::{Matches};
+use getopts::{Matches};
+
+use std::process::{Command, Stdio};
+use std::io::{Read, Write};
 
 #[derive(Debug)]
 pub enum DeleteOption {
@@ -46,10 +49,55 @@ impl GitOptions {
             None => "master".to_owned(),
         };
 
+        // validate branch exists
+        // validate you're on the branch
+        // validate remote exists
+        // git remote | grep <remote>
+
         GitOptions {
             remote: remote,
             base_branch: base_branch,
         }
+    }
+
+    pub fn validate(&self) -> Result<String, String> {
+        let current_branch_command = Command::new("git")
+            .args(&["rev-parse", "--abbrev-ref", "HEAD"])
+            .output()
+            .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+
+        let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
+
+        if current_branch.trim() != self.base_branch {
+            return Err("Please run this command from the branch: ".to_owned() + &self.base_branch)
+        };
+
+        let grep = Command::new("grep")
+            .args(&[&self.remote])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap_or_else(|e| { panic!("ERR: {}", e) });
+
+        let remotes = Command::new("git")
+            .args(&["remote"])
+            .output()
+            .unwrap_or_else(|e| panic!("ERR: {}", e));
+
+
+        {
+            grep.stdin.unwrap().write_all(&remotes.stdout).unwrap();
+        }
+
+        let mut s = String::new();
+        grep.stdout.unwrap().read_to_string(&mut s).unwrap();
+
+        if s.len() == 0 {
+            return Err("The remote ".to_owned() + &self.remote + " does not exist, please pass a valid remote.")
+        }
+
+        Ok(String::new())
     }
 }
 

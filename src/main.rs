@@ -39,9 +39,16 @@ fn main() {
 
     let git_options = GitOptions::new(&matches);
 
+    match git_options.validate() {
+        Ok(_) => (),
+        Err(err) => {
+            println!("{}", err);
+            return
+        }
+    }
+
     let branches = merged_branches(&git_options);
 
-    // Early return if there's nothing to delete
     if branches.string.len() == 0 {
         println!("No branches to delete, you're clean!");
         return;
@@ -61,11 +68,9 @@ fn main() {
         _ => return,
     }
 
-    ensure_base_branch(&git_options);
-
     match delete_branches(&branches, del_opt, &git_options) {
-        Ok(ref msg) => println!("\n{}", msg),
-        Err(ref msg) => println!("\n{}", msg),
+        Ok(msg) => println!("\n{}", msg),
+        Err(msg) => println!("\n{}", msg),
     }
 }
 
@@ -153,19 +158,6 @@ fn delete_remote_branches(branches: &String, git_options: &GitOptions) -> Result
     let output = failed_remotes.join("\n") + &stdout;
 
     Ok(output)
-}
-
-fn ensure_base_branch(git_options: &GitOptions) {
-    let current_branch_command = Command::new("git")
-        .args(&["rev-parse", "--abbrev-ref", "HEAD"])
-        .output()
-        .unwrap_or_else(|e| { panic!("ERR: {}", e) });
-
-    let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
-
-    if current_branch.trim() != git_options.base_branch {
-        panic!("Please run this command from the branch: ".to_owned() + &git_options.base_branch);
-    }
 }
 
 fn spawn_piped(args: Vec<&str>) -> Child {
