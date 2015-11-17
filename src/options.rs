@@ -61,7 +61,7 @@ impl GitOptions {
         let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
 
         if current_branch.trim() != self.base_branch {
-            return Err("Please run this command from the branch: ".to_owned() + &self.base_branch)
+            return Err("Please run this command from the branch: ".to_owned() + &self.base_branch + ".")
         };
 
         let grep = spawn_piped(vec!["grep", &self.remote]);
@@ -75,7 +75,7 @@ impl GitOptions {
         grep.stdout.unwrap().read_to_string(&mut s).unwrap();
 
         if s.len() == 0 {
-            return Err("The remote ".to_owned() + &self.remote + " does not exist, please pass a valid remote.")
+            return Err("The remote '".to_owned() + &self.remote + "' does not exist, please use a valid remote.")
         }
 
         Ok(String::new())

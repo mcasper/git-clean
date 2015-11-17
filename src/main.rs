@@ -25,16 +25,16 @@ fn main() {
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
-        Ok(m) => { m }
+        Ok(m) => m,
         Err(e) => {
             println!("{}", e);
-            print_usage(opts);
+            print_help(opts);
             return;
         }
     };
 
     if matches.opt_present("h") {
-        print_usage(opts);
+        print_help(opts);
         return;
     }
 
@@ -69,13 +69,11 @@ fn main() {
         _ => return,
     }
 
-    match delete_branches(&branches, del_opt, &git_options) {
-        Ok(msg) => println!("\n{}", msg),
-        Err(msg) => println!("\n{}", msg),
-    }
+    let msg = delete_branches(&branches, del_opt, &git_options);
+    println!("\n{}", msg);
 }
 
-fn print_usage(opts: Options) {
+fn print_help(opts: Options) {
     print!("{}", opts.usage("Usage: git-clean [options]"));
 }
 
@@ -103,8 +101,8 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     Branches::new(&s)
 }
 
-fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> Result<String, String> {
-    let output = match options {
+fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> String {
+    match options {
         DeleteOption::Local => delete_local_branches(branches),
         DeleteOption::Remote => delete_remote_branches(branches, git_options),
         DeleteOption::Both => {
@@ -112,9 +110,7 @@ fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &Git
             let out2 = delete_local_branches(branches);
             ["Remote:".to_owned(), out1, "\nLocal:".to_owned(), out2].join("\n")
         },
-    };
-
-    Ok(output)
+    }
 }
 
 #[cfg(test)]
