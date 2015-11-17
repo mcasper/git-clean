@@ -77,6 +77,31 @@ This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
 --delete 'remote_branch'`, when deleting remote branches for you. If that isn't
 acceptable, use the `-l` flag to only delete branches locally.
 
+# Installation
+Clone the repo:
+`git clone git@github.com:mcasper/git-clean`
+
+Cd to the installation:
+`cd git-clean`
+
+Run the install script with sudo:
+`sudo ./install.sh`
+
+Verify that it works!:
+```
+$ git-clean -h
+Usage: git-clean [options]
+
+Options:
+    -l, --locals        only delete local branches
+    -r, --remotes       only delete remote branches
+    -R REMOTE           changes the git remote used (default is origin)
+    -b BRANCH           changes the base for merged branches (default is
+                        master)
+    -h, --help          print this help menu
+
+```
+
 # Use
 ## git-clean
 Lists all the branches to be deleted, and prompts you to confirm:
