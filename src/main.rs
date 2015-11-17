@@ -105,12 +105,12 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
 fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> Result<String, String> {
     let output = match options {
-        DeleteOption::Local => delete_local_branches(&branches.string),
-        DeleteOption::Remote => delete_remote_branches(&branches.string, git_options),
+        DeleteOption::Local => delete_local_branches(branches),
+        DeleteOption::Remote => delete_remote_branches(branches, git_options),
         DeleteOption::Both => {
-            let out1 = delete_remote_branches(&branches.string, git_options);
-            let out2 = delete_local_branches(&branches.string);
-            ["Remote:".to_owned(), out1, "Local:".to_owned(), out2].join("\n")
+            let out1 = delete_remote_branches(branches, git_options);
+            let out2 = delete_local_branches(branches);
+            ["Remote:".to_owned(), out1, "\nLocal:".to_owned(), out2].join("\n")
         },
     };
 

@@ -41,7 +41,8 @@ you could delete branches that have valuable work on it.
 - Fast
 
 This project is written in Rust, which is [really stinkin fast](). It takes
-about Nms to delete 100+ branches.
+about 1.8 seconds to delete 100+ branches, and most of that is network time.
+`./target/release/git-clean  0.07s user 0.08s system 8% cpu 1.837 total`
 
 - Batch operations
 
