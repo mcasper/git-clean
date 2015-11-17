@@ -2,8 +2,8 @@ git-clean
 ===========
 # The Problem
 If you work on one project for a long time, you're bound to amass a good number
-of branches.  Deleting the branches locally whenever you're done with them gets
-annoying, and can cost you a lot of time in branch grooming, or trying to
+of branches. Deleting these branches locally whenever you're done with them
+gets annoying, and can cost you a lot of time in branch grooming, or trying to
 remember 'that command' to delete all merged branches locally.
 
 `git-clean` looks to remedy that. By running `git-clean`, you'll delete all
@@ -40,36 +40,40 @@ you could delete branches that have valuable work on it.
 # Advantages to this project
 - Fast
 
-This project is written in Rust, which is [really stinkin fast](). It takes
-about 1.8 seconds to delete 100+ branches, and most of that is network time.
+This project is written in Rust, which is [really stinkin
+fast](http://benchmarksgame.alioth.debian.org/u64q/rust.html). It takes about
+1.8 seconds to delete 100+ branches, and most of that is network time.
 `./target/release/git-clean  0.07s user 0.08s system 8% cpu 1.837 total`
 
 - Batch operations
 
-It deletes your branches in bulk
+It deletes your branches in bulk, no stepping through branches or selecting
+what branches you want gone. It assumes you want to delete all branches that
+are even with your base branch.
 
 - Deletes local and remote
 
 It deletes both local and remote branches, and handles the errors if the remote
-is already deleted
+is already deleted.
 
 - Only presents merged branches
 
 There's no possibly of deleting branches with valuable work on it, as it only
 deletes branches that are even with the base branch you specify (default
-master)
+master).
 
 # Assumptions
 This tool assumes that you have `git` installed, and is in your path. If you
 don't have it installed, I'm confused as to why you've read this far, but go
-[here]() to download it.
+[here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to learn
+how to install it.
 
 It also assumes that your `git` is properly configured to push and pull from
 the current repository. `git-clean` should be run from the directory that
 holds the `.git` directory you care about.
 
 This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
-`git push` on your system.  `git push will only ever be run as `git push origin
+`git push` on your system. `git pushq will only ever be run as `git push origin
 --delete 'remote_branch'`, when deleting remote branches for you. If that isn't
 acceptable, use the `-l` flag to only delete branches locally.
 
@@ -86,10 +90,18 @@ Continue? (yN)
 
 If accepted, it will delete the listed branches both locally and remotely:
 ```
-RESULT HERE
-```
+Continue? (yN) y
 
-It also offers serveral options for tweaking what branches get deleted, where.
+Remote:
+ - [deleted]         remote1
+
+ Local:
+ Deleted branch local_only (was 3a9ea97).
+ Deleted branch remote1 (was 3a9ea97).
+```
+Branches that are already deleted in the remote are filtered out.
+
+It also offers several options for tweaking what branches get deleted, where.
 
 * `-l` and `-r` toggle deleting branches only locally or only remotely
 * `-R` changes the git remote that remote branches are deleted in

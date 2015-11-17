@@ -43,8 +43,11 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let split = s.split("\n");
-    let all_remote_branches = split.collect::<BTreeSet<&str>>();
-    let b_tree_remotes = all_remote_branches.into_iter().map(|b| b.trim().trim_left_matches("origin/").to_owned()).collect::<BTreeSet<String>>();
+    let all_remote_branches = split.collect::<Vec<&str>>();
+    let b_tree_remotes = all_remote_branches
+        .iter()
+        .map(|b| b.trim().trim_left_matches("origin/").to_owned())
+        .collect::<BTreeSet<String>>();
 
     let mut b_tree_branches = BTreeSet::new();
 
@@ -58,9 +61,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
         xargs.stdin.unwrap().write_all(intersection.join("\n").as_bytes()).unwrap()
     }
 
-    let mut stdout = String::new();
     let mut stderr = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut stdout).unwrap();
     xargs.stderr.unwrap().read_to_string(&mut stderr).unwrap();
 
     // Everything is written to stderr, so we need to process that
@@ -78,7 +79,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
         }
     };
 
-    output.join("\n") + &stdout
+    output.join("\n")
 }
 
 #[cfg(test)]
