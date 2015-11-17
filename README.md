@@ -118,13 +118,15 @@ If accepted, it will delete the listed branches both locally and remotely:
 Continue? (yN) y
 
 Remote:
- - [deleted]         remote1
+ - [deleted]         branch1
 
  Local:
- Deleted branch local_only (was 3a9ea97).
- Deleted branch remote1 (was 3a9ea97).
+ Deleted branch branch1 (was 3a9ea97).
+ Deleted branch branch2 (was 3a9ea97).
+ Deleted branch branch3 (was 3a9ea97).
 ```
-Branches that are already deleted in the remote are filtered out.
+Branches that are already deleted in the remote are filtered out from the
+output.
 
 It also offers several options for tweaking what branches get deleted, where.
 
