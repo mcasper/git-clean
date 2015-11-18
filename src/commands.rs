@@ -44,9 +44,10 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let split = s.split("\n");
     let all_remote_branches = split.collect::<Vec<&str>>();
+    let trim = git_options.remote.clone() + "/";
     let b_tree_remotes = all_remote_branches
         .iter()
-        .map(|b| b.trim().trim_left_matches("origin/").to_owned())
+        .map(|b| b.trim().trim_left_matches(&trim[..]).to_owned())
         .collect::<BTreeSet<String>>();
 
     let mut b_tree_branches = BTreeSet::new();
