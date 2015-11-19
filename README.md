@@ -78,6 +78,10 @@ This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
 acceptable, use the `-l` flag to only delete branches locally.
 
 # Installation
+You will need Rust installed to run this tool, so head
+[here](https://www.rust-lang.org/downloads.html) to find the appropriate
+distribution for your machine.
+
 Clone the repo:
 `git clone git@github.com:mcasper/git-clean`
 
