@@ -82,6 +82,9 @@ You will need Rust installed to run this tool, so head
 [here](https://www.rust-lang.org/downloads.html) to find the appropriate
 distribution for your machine.
 
+This was developed on rust 1.3.0 stable, so if you're having issues with the
+compile/install step, make sure your rust version is >= 1.3.0.
+
 Clone the repo:
 `git clone git@github.com:mcasper/git-clean`
 
@@ -110,6 +113,7 @@ Options:
 ## git-clean
 Lists all the branches to be deleted, and prompts you to confirm:
 ```
+$ git-clean
 The following branches will be deleted locally and remotely:
 branch1
 branch2
