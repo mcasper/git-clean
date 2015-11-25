@@ -73,7 +73,7 @@ the current repository. `git-clean` should be run from the directory that
 holds the `.git` directory you care about.
 
 This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
-`git push` on your system. `git pushq will only ever be run as `git push origin
+`git push` on your system. `git push` will only ever be run as `git push origin
 --delete 'remote_branch'`, when deleting remote branches for you. If that isn't
 acceptable, use the `-l` flag to only delete branches locally.
 
@@ -83,7 +83,7 @@ You will need Rust installed to run this tool, so head
 distribution for your machine.
 
 This was developed on rust 1.3.0 stable, so if you're having issues with the
-compile/install step, make sure your rust version is >= 1.3.0.
+compile/install step, make sure your rust version is >= 1.3.0 stable.
 
 Clone the repo:
 `git clone git@github.com:mcasper/git-clean`
