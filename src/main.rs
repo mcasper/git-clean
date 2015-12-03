@@ -7,11 +7,12 @@ use std::env;
 use getopts::{Options};
 
 mod options;
-mod branches;
-mod commands;
-
 use options::{DeleteOption, GitOptions};
+
+mod branches;
 use branches::{Branches};
+
+mod commands;
 use commands::{spawn_piped, run_command, delete_local_branches, delete_remote_branches};
 
 fn main() {
@@ -66,6 +67,7 @@ fn main() {
     match input.to_lowercase().as_ref() {
         "y\n" => (),
         "yes\n" => (),
+        "\n" => (),
         _ => return,
     }
 
@@ -80,7 +82,7 @@ fn print_help(opts: Options) {
 fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
     println!("{}", del_opt.warning_message());
     println!("{}", branches.format_columns());
-    print!("Continue? (yN) ");
+    print!("Continue? (Y/n) ");
     io::stdout().flush().unwrap();
 }
 
