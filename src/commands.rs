@@ -74,7 +74,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
             let branch = s.trim_left_matches("error: unable to delete '")
                 .trim_right_matches("': remote ref does not exist");
 
-            output.push(branch.to_owned() + " was already deleted in the remote or was never there.");
+            output.push(branch.to_owned() + " was already deleted in the remote.");
         } else if s.contains(" - [deleted]") {
             output.push(s.to_owned());
         }

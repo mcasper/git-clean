@@ -118,15 +118,16 @@ The following branches will be deleted locally and remotely:
 branch1
 branch2
 branch3
-Continue? (yN)
+Continue? (Y/n)
 ```
 
 If accepted, it will delete the listed branches both locally and remotely:
 ```
-Continue? (yN) y
+Continue? (Y/n) y
 
 Remote:
  - [deleted]         branch1
+ branch2 was already deleted in the remote.
 
  Local:
  Deleted branch branch1 (was 3a9ea97).
