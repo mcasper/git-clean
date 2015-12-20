@@ -58,9 +58,9 @@ is already deleted.
 
 - Only presents merged branches
 
-There's no possibly of deleting branches with valuable work on it, as it only
-deletes branches that are even with the base branch you specify (default
-master).
+There's no possibility of deleting branches with valuable work on them, as it
+only deletes branches that are even with the base branch you specify (defaults
+to master).
 
 # Assumptions
 This tool assumes that you have `git` installed, and is in your path. If you
