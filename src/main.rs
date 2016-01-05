@@ -1,3 +1,5 @@
+#[deny(warnings)]
+
 extern crate getopts;
 
 use std::io;
