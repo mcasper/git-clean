@@ -87,12 +87,18 @@ compile/install step, make sure your rust version is >= 1.3.0 stable.
 
 With Rust installed, we can now use the Rust package manager, `cargo`, to
 install git-clean:
-```
+```shell
 cargo install git-clean
 ```
 
-Verify that it works!:
+Be sure to add the installation path to your PATH variable. For me, it's
+downloaded to:
 ```
+/Users/mattcasper/.multirust/toolchains/stable/cargo/bin/git-clean
+```
+
+Verify that it works!:
+```shell
 $ git-clean -h
 Usage: git-clean [options]
 
@@ -109,7 +115,7 @@ Options:
 # Use
 ## git-clean
 Lists all the branches to be deleted, and prompts you to confirm:
-```
+```shell
 $ git-clean
 The following branches will be deleted locally and remotely:
 branch1
@@ -119,7 +125,7 @@ Continue? (Y/n)
 ```
 
 If accepted, it will delete the listed branches both locally and remotely:
-```
+```shell
 Continue? (Y/n) y
 
 Remote:
