@@ -2,6 +2,11 @@
 name = "git-clean"
 version = "0.2.0"
 authors = ["Matt Casper <matthewvcasper@gmail.com>"]
+license = "MIT"
+description = "A tool for cleaning old git branches."
+documentation = "https://github.com/mcasper/git-clean"
+homepage = "https://github.com/mcasper/git-clean"
+repository = "https://github.com/mcasper/git-clean"
 
 [dependencies]
 getopts = "0.2"
