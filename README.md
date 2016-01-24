@@ -85,14 +85,11 @@ distribution for your machine.
 This was developed on rust 1.3.0 stable, so if you're having issues with the
 compile/install step, make sure your rust version is >= 1.3.0 stable.
 
-Clone the repo:
-`git clone git@github.com:mcasper/git-clean`
-
-Cd to the installation:
-`cd git-clean`
-
-Run the install script with sudo:
-`sudo ./install.sh`
+With Rust installed, we can now use the Rust package manager, `cargo`, to
+install git-clean:
+```
+cargo install git-clean
+```
 
 Verify that it works!:
 ```
