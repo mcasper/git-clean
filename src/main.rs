@@ -6,16 +6,16 @@ use std::io;
 use std::io::{Read, Write};
 use std::env;
 
-use getopts::{Options};
+use getopts::Options;
 
 mod options;
 use options::{DeleteOption, GitOptions};
 
 mod branches;
-use branches::{Branches};
+use branches::Branches;
 
 mod commands;
-use commands::{spawn_piped, run_command, delete_local_branches, delete_remote_branches};
+use commands::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -73,7 +73,7 @@ fn main() {
         _ => return,
     }
 
-    let msg = delete_branches(&branches, del_opt, &git_options);
+    let msg = delete_branches(&branches, &del_opt, &git_options);
     println!("\n{}", msg);
 }
 
@@ -90,7 +90,7 @@ fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
 
 fn merged_branches(git_options: &GitOptions) -> Branches {
     let base_branch = &git_options.base_branch;
-    let regex = "(\\* ".to_owned() + base_branch + "|\\s" + base_branch + ")";
+    let regex = format!("(\\*{branch}|\\s{branch})", branch = base_branch);
     let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
     let gbranch = run_command(vec!["git", "branch", "--merged", base_branch]);
@@ -105,8 +105,8 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     Branches::new(&s)
 }
 
-fn delete_branches(branches: &Branches, options: DeleteOption, git_options: &GitOptions) -> String {
-    match options {
+fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &GitOptions) -> String {
+    match *options {
         DeleteOption::Local => delete_local_branches(branches),
         DeleteOption::Remote => delete_remote_branches(branches, git_options),
         DeleteOption::Both => {

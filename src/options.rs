@@ -25,12 +25,12 @@ impl DeleteOption {
     }
 
     pub fn warning_message(&self) -> String {
-        let source = match self {
-            &Local => "locally:",
-            &Remote => "remotely:",
-            &Both => "locally and remotely:",
+        let source = match *self {
+            Local => "locally:",
+            Remote => "remotely:",
+            Both => "locally and remotely:",
         };
-        "The following branches will be deleted ".to_owned() + source
+        format!("The following branches will be deleted {}", source)
     }
 }
 
@@ -75,7 +75,7 @@ impl GitOptions {
         grep.stdout.unwrap().read_to_string(&mut s).unwrap();
 
         if s.len() == 0 {
-            return Err("The remote '".to_owned() + &self.remote + "' does not exist, please use a valid remote.")
+            return Err(format!("The remote '{}' does not exist, please use a valid remote.", &self.remote))
         }
 
         Ok(String::new())

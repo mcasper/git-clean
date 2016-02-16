@@ -33,29 +33,19 @@ impl Branches {
         // TODO: Make this code generic with some crazy loops
         match col_count {
             2 => {
-                let mut largest_col1 = 0;
-                for chunk in chunks {
-                    if chunk[0].len() > largest_col1 {
-                        largest_col1 = chunk[0].len()
-                    }
-                }
+                let largest_col1 = chunks.map(|chunk| chunk[0].len()).max().unwrap();
                 let col2_start = largest_col1 + 30;
                 col_indices.push(col2_start);
             },
             3 => {
-                let mut largest_col1 = 0;
-                let mut largest_col2 = 0;
-                for chunk in chunks {
-                    if chunk[0].len() > largest_col1 {
-                        largest_col1 = chunk[0].len()
-                    };
+                let largest_col1 = chunks.clone().map(|chunk| chunk[0].len()).max().unwrap();
+                let largest_col2 = chunks.map(|chunk| {
                     if let Some(branch) = chunk.get(1) {
-                        if branch.len() > largest_col2 {
-                            largest_col2 = chunk[1].len()
-                        }
+                        branch.len()
                     } else {
-                    };
-                }
+                        0
+                    }
+                }).max().unwrap();
                 let col2_start = largest_col1 + 30;
                 let col3_start = largest_col2 + 30;
                 col_indices.push(col2_start);
@@ -72,15 +62,14 @@ impl Branches {
 }
 
 fn make_row(chunks: &[String], col_indices: &Vec<usize>) -> String {
-    let mut result = chunks[0].clone();
-    for (i, chunk) in chunks[1..].iter().enumerate() {
-        let spacer_len = col_indices[i] - chunks[i].len();
-        let mut spacer = String::new();
-        let _: Vec<_> = (0..spacer_len).map(|_| spacer.push_str(" ")).collect();
-        result.push_str(&spacer);
-        result.push_str(chunk);
+    match chunks.len() {
+        1 => { chunks[0].clone() },
+        2 => { format!("{b1:0$}{b2}", col_indices[0], b1 = chunks[0], b2 = chunks[1]) },
+        3 => {
+            format!("{b1:0$}{b2:1$}{b3}", col_indices[0], col_indices[1], b1 = chunks[0], b2 = chunks[1], b3 = chunks[2])
+        },
+        _ => unreachable!()
     }
-    result
 }
 
 #[cfg(test)]
