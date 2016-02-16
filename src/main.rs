@@ -23,6 +23,7 @@ fn main() {
     let mut opts = Options::new();
     opts.optflag("l", "locals", "only delete local branches");
     opts.optflag("r", "remotes", "only delete remote branches");
+    opts.optflag("y", "yes", "skip the check for deleting branches");
     opts.optopt("R", "", "changes the git remote used (default is origin)", "REMOTE");
     opts.optopt("b", "", "changes the base for merged branches (default is master)", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
@@ -58,19 +59,21 @@ fn main() {
         return;
     }
 
-    let del_opt = DeleteOption::new(matches);
+    let del_opt = DeleteOption::new(&matches);
 
-    print_warning(&branches, &del_opt);
+    if !matches.opt_present("y") {
+        print_warning(&branches, &del_opt);
 
-    // Read the user's response on continuing
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
+        // Read the user's response on continuing
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
 
-    match input.to_lowercase().as_ref() {
-        "y\n" => (),
-        "yes\n" => (),
-        "\n" => (),
-        _ => return,
+        match input.to_lowercase().as_ref() {
+            "y\n" => (),
+            "yes\n" => (),
+            "\n" => (),
+            _ => return,
+        }
     }
 
     let msg = delete_branches(&branches, &del_opt, &git_options);

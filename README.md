@@ -82,8 +82,8 @@ You will need Rust installed to run this tool, so head
 [here](https://www.rust-lang.org/downloads.html) to find the appropriate
 distribution for your machine.
 
-This was developed on rust 1.3.0 stable, so if you're having issues with the
-compile/install step, make sure your rust version is >= 1.3.0 stable.
+This was developed on rust 1.6.0 stable, so if you're having issues with the
+compile/install step, make sure your rust version is >= 1.6.0 stable.
 
 With Rust installed, we can now use the Rust package manager, `cargo`, to
 install git-clean:
@@ -105,6 +105,7 @@ Usage: git-clean [options]
 Options:
     -l, --locals        only delete local branches
     -r, --remotes       only delete remote branches
+    -y, --yes           skip the check for deleting branches
     -R REMOTE           changes the git remote used (default is origin)
     -b BRANCH           changes the base for merged branches (default is
                         master)
@@ -145,6 +146,11 @@ It also offers several options for tweaking what branches get deleted, where.
 * `-l` and `-r` toggle deleting branches only locally or only remotely
 * `-R` changes the git remote that remote branches are deleted in
 * `-b` changes the base branch for finding merged branches to delete
+
+And other miscellaneous options:
+
+* `-y` overrides the delete branches check. Nice for automating workflows where
+  you don't want to be prompted.
 
 # Contributions
 PRs and issues welcome!

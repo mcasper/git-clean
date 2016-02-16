@@ -14,7 +14,7 @@ pub enum DeleteOption {
 pub use self::DeleteOption::*;
 
 impl DeleteOption {
-    pub fn new(opts: Matches) -> DeleteOption {
+    pub fn new(opts: &Matches) -> DeleteOption {
         return if opts.opt_present("l") {
             Local
         } else if opts.opt_present("r") {
@@ -107,21 +107,21 @@ mod test {
     fn test_delete_option_new() {
         let matches = parse_args(vec!["-l"]);
 
-        match DeleteOption::new(matches) {
+        match DeleteOption::new(&matches) {
             DeleteOption::Local => (),
             other @ _ => panic!("Expected a DeleteOption::Local, but found: {:?}", other),
         };
 
         let matches = parse_args(vec!["-r"]);
 
-        match DeleteOption::new(matches) {
+        match DeleteOption::new(&matches) {
             DeleteOption::Remote => (),
             other @ _ => panic!("Expected a DeleteOption::Remote, but found: {:?}", other),
         };
 
         let matches = parse_args(vec![]);
 
-        match DeleteOption::new(matches) {
+        match DeleteOption::new(&matches) {
             DeleteOption::Both => (),
             other @ _ => panic!("Expected a DeleteOption::Both, but found: {:?}", other),
         };
