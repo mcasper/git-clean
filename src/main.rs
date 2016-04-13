@@ -17,6 +17,8 @@ use branches::Branches;
 mod commands;
 use commands::*;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -27,6 +29,7 @@ fn main() {
     opts.optopt("R", "", "changes the git remote used (default is origin)", "REMOTE");
     opts.optopt("b", "", "changes the base for merged branches (default is master)", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
+    opts.optflag("v", "version", "print the version");
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
@@ -39,6 +42,11 @@ fn main() {
 
     if matches.opt_present("h") {
         print_help(opts);
+        return;
+    }
+
+    if matches.opt_present("version") {
+        print_version();
         return;
     }
 
@@ -78,6 +86,10 @@ fn main() {
 
     let msg = delete_branches(&branches, &del_opt, &git_options);
     println!("\n{}", msg);
+}
+
+fn print_version() {
+    println!("git-clean version {}", VERSION);
 }
 
 fn print_help(opts: Options) {
