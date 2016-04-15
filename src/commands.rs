@@ -2,7 +2,7 @@ use std::process::{Command, Stdio, Child, Output};
 use std::io::{Read, Write};
 use std::collections::BTreeSet;
 
-use options::{GitOptions};
+use options::GitOptions;
 use branches::Branches;
 
 pub fn spawn_piped(args: Vec<&str>) -> Child {
@@ -31,9 +31,9 @@ pub fn delete_local_branches(branches: &Branches) -> String {
         xargs.stdin.unwrap().write_all(&branches.string.as_bytes()).unwrap()
     }
 
-    let mut s = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut s).unwrap();
-    s
+    let mut branches_delete_result = String::new();
+    xargs.stdout.unwrap().read_to_string(&mut branches_delete_result).unwrap();
+    branches_delete_result
 }
 
 pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> String {

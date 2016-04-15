@@ -2,9 +2,8 @@
 
 extern crate getopts;
 
-use std::io;
+use std::{env, io};
 use std::io::{Read, Write};
-use std::env;
 
 use getopts::Options;
 
@@ -93,19 +92,19 @@ fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
 
 fn merged_branches(git_options: &GitOptions) -> Branches {
     let base_branch = &git_options.base_branch;
-    let regex = format!("(\\*{branch}|\\s{branch})", branch = base_branch);
+    let regex = format!("\\*{branch}|\\s{branch}", branch = base_branch);
     let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
-    let gbranch = run_command(vec!["git", "branch", "--merged", base_branch]);
+    let gbranch = run_command(vec!["git", "branch", "--contains", base_branch]);
 
     {
         grep.stdin.unwrap().write_all(&gbranch.stdout).unwrap();
     }
 
-    let mut s = String::new();
-    grep.stdout.unwrap().read_to_string(&mut s).unwrap();
+    let mut grep_result = String::new();
+    grep.stdout.unwrap().read_to_string(&mut grep_result).unwrap();
 
-    Branches::new(&s)
+    Branches::new(&grep_result)
 }
 
 fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &GitOptions) -> String {
