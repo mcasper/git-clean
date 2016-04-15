@@ -113,6 +113,14 @@ Options:
 
 ```
 
+# Updating
+If you're updating from an older version of git-clean, just uninstall and then
+reinstall:
+```shell
+cargo uninstall git-clean
+cargo install git-clean
+```
+
 # Use
 ## git-clean
 Lists all the branches to be deleted, and prompts you to confirm:
