@@ -29,7 +29,7 @@ impl ProjectBuilder {
         project.batch_setup_commands(
             vec![
                 "git init",
-                "git remote add origin www.example.com",
+                "git remote add origin remote",
                 "touch test_file.txt",
                 "git add .",
                 "git commit -am Init",

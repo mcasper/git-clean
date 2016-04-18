@@ -20,6 +20,27 @@ fn test_git_clean_removes_local_branches() {
 }
 
 #[test]
+fn test_git_clean_works_with_merged_branches() {
+    let project = project("git-clean_squashed_merges").build();
+
+    project.batch_setup_commands(
+        vec![
+            "git checkout -b merged",
+            "touch file2.txt",
+            "git add .",
+            "git commit -am Merged",
+            "git checkout master",
+            "git merge merged",
+        ]
+    );
+
+    let result = project.git_clean_command("-y");
+
+    assert!(result.is_success(), result.failure_message("command to succeed"));
+    assert!(result.stdout().contains("Deleted branch merged"), result.failure_message("command to delete merged"));
+}
+
+#[test]
 fn test_git_clean_works_with_squashed_merges() {
     let project = project("git-clean_squashed_merges").build();
 

@@ -3,6 +3,9 @@ rust:
   - stable
   - beta
   - nightly
+before_script:
+  - git config --global user.email "user@example.com"
+  - git config --global user.name "Example User"
 matrix:
   allow_failures:
     - rust: nightly
