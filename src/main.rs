@@ -107,7 +107,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     let regex = format!("\\*{branch}|\\s{branch}", branch = base_branch);
     let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
-    let gbranch = run_command(vec!["git", "branch", "--contains", base_branch]);
+    let gbranch = run_command(vec!["git", "branch", "--merged"]);
 
     {
         grep.stdin.unwrap().write_all(&gbranch.stdout).unwrap();

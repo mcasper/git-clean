@@ -82,8 +82,8 @@ You will need Rust installed to run this tool, so head
 [here](https://www.rust-lang.org/downloads.html) to find the appropriate
 distribution for your machine.
 
-This was developed on rust 1.6.0 stable, so if you're having issues with the
-compile/install step, make sure your rust version is >= 1.6.0 stable.
+This was developed on rust 1.8.0 stable, so if you're having issues with the
+compile/install step, make sure your rust version is >= 1.8.0 stable.
 
 With Rust installed, we can now use the Rust package manager, `cargo`, to
 install git-clean:
