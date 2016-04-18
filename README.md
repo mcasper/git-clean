@@ -110,6 +110,7 @@ Options:
     -b BRANCH           changes the base for merged branches (default is
                         master)
     -h, --help          print this help menu
+    -v, --version       print the version
 
 ```
 
