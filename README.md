@@ -63,14 +63,9 @@ only deletes branches that are even with the base branch you specify (defaults
 to master).
 
 # Assumptions
-This tool assumes that you have `git` installed, and is in your path. If you
-don't have it installed, I'm confused as to why you've read this far, but go
-[here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to learn
-how to install it.
-
-It also assumes that your `git` is properly configured to push and pull from
-the current repository. `git-clean` should be run from the directory that
-holds the `.git` directory you care about.
+This tool assumes (but will also check) that your `git` is properly configured
+to push and pull from the current repository. `git-clean` should be run from
+the directory that holds the `.git` directory you care about.
 
 This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
 `git push` on your system. `git push` will only ever be run as `git push origin
@@ -82,10 +77,10 @@ You will need Rust installed to run this tool, so head
 [here](https://www.rust-lang.org/downloads.html) to find the appropriate
 distribution for your machine.
 
-This was developed on rust 1.8.0 stable, so if you're having issues with the
-compile/install step, make sure your rust version is >= 1.8.0 stable.
+This was developed on Rust 1.10.0 stable, so if you're having issues with the
+compile/install step, make sure your Rust version is >= 1.10.0 stable.
 
-With Rust installed, we can now use the Rust package manager, `cargo`, to
+With Rust installed, we can now use the Rust package manager Cargo, to
 install git-clean:
 ```shell
 cargo install git-clean

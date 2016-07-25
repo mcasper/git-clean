@@ -1,6 +1,18 @@
 use support::project;
 
 #[test]
+fn test_git_clean_checks_for_git_in_path() {
+    let project = project("git-clean_removes").build();
+
+    let result = project.git_clean_command("git")
+        .env("PATH", "")
+        .run();
+
+    assert!(!result.is_success(), result.failure_message("command to fail"));
+    assert!(result.stdout().contains("Unable to execute 'git' on your machine"), result.failure_message("to be missing the git command"));
+}
+
+#[test]
 fn test_git_clean_removes_local_branches() {
     let project = project("git-clean_removes").build();
 
@@ -12,7 +24,7 @@ fn test_git_clean_removes_local_branches() {
     assert!(verify.stdout().contains("test1"), verify.failure_message("test1"));
     assert!(verify.stdout().contains("test2"), verify.failure_message("test2"));
 
-    let result = project.git_clean_command("-y");
+    let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(), result.failure_message("command to succeed"));
     assert!(result.stdout().contains("Deleted branch test1"), result.failure_message("command to delete test1"));
@@ -34,7 +46,7 @@ fn test_git_clean_works_with_merged_branches() {
         ]
     );
 
-    let result = project.git_clean_command("-y");
+    let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(), result.failure_message("command to succeed"));
     assert!(result.stdout().contains("Deleted branch merged"), result.failure_message("command to delete merged"));
@@ -55,7 +67,7 @@ fn test_git_clean_works_with_squashed_merges() {
         ]
     );
 
-    let result = project.git_clean_command("-y");
+    let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(), result.failure_message("command to succeed"));
     assert!(result.stdout().contains("Deleted branch squashed"), result.failure_message("command to delete squashed"));
@@ -75,7 +87,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
         ]
     );
 
-    let result = project.git_clean_command("-y");
+    let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(), result.failure_message("command to succeed"));
     assert!(!result.stdout().contains("Deleted branch ahead"), result.failure_message("command not to delete ahead"));

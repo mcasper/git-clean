@@ -2,8 +2,9 @@ use std::process::{Command, Stdio, Child, Output};
 use std::io::{Read, Write};
 use std::collections::BTreeSet;
 
-use options::GitOptions;
 use branches::Branches;
+use error::GitCleanError;
+use options::GitOptions;
 
 pub fn spawn_piped(args: Vec<&str>) -> Child {
     let cmd = args[0];
@@ -22,6 +23,15 @@ pub fn run_command(args: Vec<&str>) -> Output {
         .args(&args[1..])
         .output()
         .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
+}
+
+pub fn validate_git_installation() -> Result<(), GitCleanError> {
+    let result = Command::new("git").output();
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(_) => Err(GitCleanError::GitInstallationError),
+    }
 }
 
 pub fn delete_local_branches(branches: &Branches) -> String {

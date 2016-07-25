@@ -65,9 +65,9 @@ impl Project {
         commands.iter().map(|command| self.setup_command(command)).collect::<Vec<TestCommandResult>>();
     }
 
-    pub fn git_clean_command(&self, command: &str) -> TestCommandResult {
+    pub fn git_clean_command(&self, command: &str) -> TestCommand {
         let command_pieces = command.split(" ").collect::<Vec<&str>>();
-        TestCommand::new(&self.path(), command_pieces, path_to_git_clean()).run()
+        TestCommand::new(&self.path(), command_pieces, path_to_git_clean())
     }
 
     fn path(&self) -> PathBuf {
@@ -78,6 +78,7 @@ impl Project {
 pub struct TestCommand {
     pub path: PathBuf,
     args: Vec<String>,
+    envs: Vec<(String, String)>,
     top_level_command: String,
 }
 
@@ -88,12 +89,21 @@ impl TestCommand {
         TestCommand {
             path: path.into(),
             args: owned_args,
+            envs: vec![],
             top_level_command: top_level_command.into(),
         }
     }
 
+    pub fn env(mut self, key: &str, value: &str) -> TestCommand {
+        self.envs.push((key.into(), value.into()));
+        self
+    }
+
     pub fn run(&self) -> TestCommandResult {
         let mut command = Command::new(&self.top_level_command);
+        for &(ref k, ref v) in self.envs.iter() {
+            command.env(&k, &v);
+        }
         let output = command
             .args(&self.args)
             .current_dir(&self.path)
