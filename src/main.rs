@@ -4,8 +4,11 @@ extern crate getopts;
 
 use std::{env, io};
 use std::io::{Read, Write};
+use std::error::Error;
 
 use getopts::Options;
+
+mod error;
 
 mod options;
 use options::{DeleteOption, GitOptions};
@@ -49,16 +52,10 @@ fn main() {
         return;
     }
 
+    validate_git_installation().unwrap_or_else(print_and_exit);
+
     let git_options = GitOptions::new(&matches);
-
-    match git_options.validate() {
-        Ok(_) => (),
-        Err(err) => {
-            println!("{}", err);
-            return
-        }
-    }
-
+    git_options.validate().unwrap_or_else(print_and_exit);
     let branches = merged_branches(&git_options);
 
     if branches.string.len() == 0 {
@@ -129,6 +126,11 @@ fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &Gi
             ["Remote:".to_owned(), out1, "\nLocal:".to_owned(), out2].join("\n")
         },
     }
+}
+
+fn print_and_exit<E: Error>(e: E) {
+    println!("{}", e);
+    std::process::exit(1);
 }
 
 #[cfg(test)]

@@ -4,6 +4,8 @@ use std::io::{Read, Write};
 
 use commands::{spawn_piped, run_command};
 
+use error::GitCleanError;
+
 #[derive(Debug)]
 pub enum DeleteOption {
     Local,
@@ -56,12 +58,12 @@ impl GitOptions {
         }
     }
 
-    pub fn validate(&self) -> Result<String, String> {
+    pub fn validate(&self) -> Result<(), GitCleanError> {
         let current_branch_command = run_command(vec!["git", "rev-parse", "--abbrev-ref", "HEAD"]);
         let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
 
         if current_branch.trim() != self.base_branch {
-            return Err("Please run this command from the branch: ".to_owned() + &self.base_branch + ".")
+            return Err(GitCleanError::CurrentBranchInvalidError)
         };
 
         let grep = spawn_piped(vec!["grep", &self.remote]);
@@ -75,10 +77,10 @@ impl GitOptions {
         grep.stdout.unwrap().read_to_string(&mut s).unwrap();
 
         if s.len() == 0 {
-            return Err(format!("The remote '{}' does not exist, please use a valid remote.", &self.remote))
+            return Err(GitCleanError::InvalidRemoteError)
         }
 
-        Ok(String::new())
+        Ok(())
     }
 }
 
