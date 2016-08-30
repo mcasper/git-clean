@@ -24,10 +24,11 @@ impl ProjectBuilder {
         let project = Project {
             directory: tempdir,
             name: self.name,
+            remote: None,
         };
 
         project.batch_setup_commands(
-            vec![
+            &[
                 "git init",
                 "git remote add origin remote",
                 "touch test_file.txt",
@@ -43,6 +44,7 @@ impl ProjectBuilder {
 pub struct Project {
     directory: TempDir,
     pub name: String,
+    remote: Option<TempDir>,
 }
 
 impl Project {
@@ -61,7 +63,7 @@ impl Project {
         result
     }
 
-    pub fn batch_setup_commands(&self, commands: Vec<&str>) {
+    pub fn batch_setup_commands(&self, commands: &[&str]) {
         commands.iter().map(|command| self.setup_command(command)).collect::<Vec<TestCommandResult>>();
     }
 
@@ -72,6 +74,24 @@ impl Project {
 
     fn path(&self) -> PathBuf {
         self.directory.path().into()
+    }
+
+    pub fn setup_remote(mut self) -> Project {
+        let tempdir = TempDir::new(&format!("{}_remote", &self.name)).unwrap();
+
+        // For lifetime scoping, we want the remote to live as long as the project does
+        let tempdir_path = tempdir.path().to_owned().clone();
+        self.remote = Some(tempdir);
+
+        Command::new("git")
+            .arg("init")
+            .current_dir(&tempdir_path)
+            .output()
+            .unwrap();
+
+        self.setup_command(&format!("git remote set-url origin {}", tempdir_path.display()));
+
+        self
     }
 }
 

@@ -59,15 +59,15 @@ impl GitOptions {
     }
 
     pub fn validate(&self) -> Result<(), GitCleanError> {
-        let current_branch_command = run_command(vec!["git", "rev-parse", "--abbrev-ref", "HEAD"]);
+        let current_branch_command = run_command(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
         let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
 
         if current_branch.trim() != self.base_branch {
             return Err(GitCleanError::CurrentBranchInvalidError)
         };
 
-        let grep = spawn_piped(vec!["grep", &self.remote]);
-        let remotes = run_command(vec!["git", "remote"]);
+        let grep = spawn_piped(&["grep", &self.remote]);
+        let remotes = run_command(&["git", "remote"]);
 
         {
             grep.stdin.unwrap().write_all(&remotes.stdout).unwrap();

@@ -1,19 +1,18 @@
 pub const COLUMN_SPACER_LENGTH: usize = 30;
 
+#[derive(Debug)]
 pub struct Branches {
     pub string: String,
     pub vec: Vec<String>
 }
 
 impl Branches {
-    pub fn new(branches: &String) -> Branches {
-        let vec = branches.split("\n").collect::<Vec<&str>>();
-        let trimmed_vec: Vec<String> = vec.iter().map(|s| s.trim().into()).collect();
-        let trimmed_string = trimmed_vec.join("\n").trim_right_matches("\n").into();
+    pub fn new(branches: Vec<String>) -> Branches {
+        let trimmed_string = branches.join("\n").trim_right_matches("\n").into();
 
         Branches {
             string: trimmed_string,
-            vec: trimmed_vec,
+            vec: branches,
         }
     }
 
@@ -68,8 +67,8 @@ mod test {
 
     #[test]
     fn test_branches_new() {
-        let input = " branch1\n branch2 ";
-        let branches = Branches::new(&input.to_string());
+        let input = vec!["branch1".to_owned(), "branch2".to_owned()];
+        let branches = Branches::new(input);
 
         assert_eq!("branch1\nbranch2".to_owned(), branches.string);
         assert_eq!(vec!["branch1".to_owned(), "branch2".to_owned()], branches.vec);
@@ -77,12 +76,12 @@ mod test {
 
     #[test]
     fn test_format_single_column() {
-        let mut input = String::new();
+        let mut input = vec![];
         for _ in 0..24 {
-            input.push_str("branch\n")
+            input.push("branch".to_owned())
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -116,12 +115,12 @@ branch";
 
     #[test]
     fn test_format_two_columns() {
-        let mut input = String::new();
+        let mut input = vec![];
         for _ in 0..26 {
-            input.push_str("branch\n")
+            input.push("branch".to_owned())
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -144,12 +143,12 @@ branch                              branch";
 
     #[test]
     fn test_format_three_columns() {
-        let mut input = String::new();
+        let mut input = vec![];
         for _ in 0..51 {
-            input.push_str("branch\n")
+            input.push("branch".to_owned())
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -176,12 +175,12 @@ branch                              branch                              branch";
 
     #[test]
     fn test_format_maxes_at_three_columns() {
-        let mut input = String::new();
+        let mut input = vec![];
         for _ in 0..76 {
-            input.push_str("branch\n")
+            input.push("branch".to_owned())
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -218,14 +217,12 @@ branch\
 
     #[test]
     fn test_branches_of_different_lengths() {
-        let mut input = String::new();
+        let mut input = vec![];
         for (i, _) in (0..26).enumerate() {
-            input.push_str("branch");
-            input.push_str(&i.to_string());
-            input.push_str("\n");
+            input.push(format!("branch{}", i))
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -247,14 +244,12 @@ branch24                              branch25";
 
     #[test]
     fn test_branches_of_bigger_lengths() {
-        let mut input = "really_long_branch_name\nbranch-1\n".to_owned();
+        let mut input = vec!["really_long_branch_name".to_owned(), "branch-1".to_owned()];
         for (i, _) in (0..26).enumerate() {
-            input.push_str("branch");
-            input.push_str(&i.to_string());
-            input.push_str("\n");
+            input.push(format!("branch{}", i));
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
@@ -277,14 +272,12 @@ branch24                                             branch25";
 
     #[test]
     fn test_long_branches_with_three_columns() {
-        let mut input = "really_long_branch_name\nbranch\nbranch\nbranch\nreally_long_middle_col\nbranch\n".to_owned();
+        let mut input = vec!["really_long_branch_name".to_owned(), "branch".to_owned(), "branch".to_owned(), "branch".to_owned(), "really_long_middle_col".to_owned(), "branch".to_owned()];
         for i in 0..45 {
-            input.push_str("branch");
-            input.push_str(&i.to_string());
-            input.push_str("\n");
+            input.push(format!("branch{}", i));
         }
 
-        let branches = Branches::new(&input);
+        let branches = Branches::new(input);
 
         let expected =
 "\
