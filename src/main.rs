@@ -56,6 +56,15 @@ fn main() {
 
     let git_options = GitOptions::new(&matches);
     git_options.validate().unwrap_or_else(print_and_exit);
+
+    // git remote update <remote> --prune
+
+    // if deleted in remote, list
+    //
+    //
+    // g branch -d -r <remote>/<branch>
+    // g branch -d <branch>
+
     let branches = merged_branches(&git_options);
 
     if branches.string.len() == 0 {
@@ -100,8 +109,7 @@ fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
 }
 
 fn merged_branches(git_options: &GitOptions) -> Branches {
-    let base_branch = &git_options.base_branch;
-    let regex = format!("\\*{branch}|\\s{branch}", branch = base_branch);
+    let regex = format!("\\*{branch}|\\s{branch}", branch = &git_options.base_branch);
     let grep = spawn_piped(vec!["grep", "-vE", &regex]);
 
     let gbranch = run_command(vec!["git", "branch", "--merged"]);
