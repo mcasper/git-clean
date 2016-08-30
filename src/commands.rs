@@ -7,8 +7,7 @@ use error::GitCleanError;
 use options::GitOptions;
 
 pub fn spawn_piped(args: Vec<&str>) -> Child {
-    let cmd = args[0];
-    Command::new(cmd)
+    Command::new(&args[0])
         .args(&args[1..])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -18,17 +17,14 @@ pub fn spawn_piped(args: Vec<&str>) -> Child {
 }
 
 pub fn run_command(args: Vec<&str>) -> Output {
-    let cmd = args[0];
-    Command::new(cmd)
+    Command::new(&args[0])
         .args(&args[1..])
         .output()
         .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
 }
 
 pub fn validate_git_installation() -> Result<(), GitCleanError> {
-    let result = Command::new("git").output();
-
-    match result {
+    match Command::new("git").output() {
         Ok(_) => Ok(()),
         Err(_) => Err(GitCleanError::GitInstallationError),
     }
@@ -52,12 +48,11 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
     let remote_branches_cmd = run_command(vec!["git", "branch", "-r"]);
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
-    let split = s.split("\n");
-    let all_remote_branches = split.collect::<Vec<&str>>();
-    let trim = git_options.remote.clone() + "/";
+    let all_remote_branches = s.split("\n").collect::<Vec<&str>>();
+    let origin_for_trim = &format!("{}/", &git_options.remote)[..];
     let b_tree_remotes = all_remote_branches
         .iter()
-        .map(|b| b.trim().trim_left_matches(&trim[..]).to_owned())
+        .map(|b| b.trim().trim_left_matches(origin_for_trim).to_owned())
         .collect::<BTreeSet<String>>();
 
     let mut b_tree_branches = BTreeSet::new();

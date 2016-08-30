@@ -1,3 +1,5 @@
+pub const COLUMN_SPACER_LENGTH: usize = 30;
+
 pub struct Branches {
     pub string: String,
     pub vec: Vec<String>
@@ -5,10 +7,9 @@ pub struct Branches {
 
 impl Branches {
     pub fn new(branches: &String) -> Branches {
-        let split = branches.split("\n");
-        let vec: Vec<&str> = split.collect();
-        let trimmed_vec: Vec<String> = vec.iter().map(|s| s.trim().to_owned()).collect();
-        let trimmed_string = trimmed_vec.join("\n").trim_right_matches("\n").to_owned();
+        let vec = branches.split("\n").collect::<Vec<&str>>();
+        let trimmed_vec: Vec<String> = vec.iter().map(|s| s.trim().into()).collect();
+        let trimmed_string = trimmed_vec.join("\n").trim_right_matches("\n").into();
 
         Branches {
             string: trimmed_string,
@@ -30,28 +31,17 @@ impl Branches {
         let chunks = self.vec.chunks(col_count);
         let mut col_indices = vec![];
 
-        // TODO: Make this code generic with some crazy loops
-        match col_count {
-            2 => {
-                let largest_col1 = chunks.map(|chunk| chunk[0].len()).max().unwrap();
-                let col2_start = largest_col1 + 30;
-                col_indices.push(col2_start);
-            },
-            3 => {
-                let largest_col1 = chunks.clone().map(|chunk| chunk[0].len()).max().unwrap();
-                let largest_col2 = chunks.map(|chunk| {
-                    if let Some(branch) = chunk.get(1) {
-                        branch.len()
-                    } else {
-                        0
-                    }
-                }).max().unwrap();
-                let col2_start = largest_col1 + 30;
-                let col3_start = largest_col2 + 30;
-                col_indices.push(col2_start);
-                col_indices.push(col3_start);
-            },
-            _ => unreachable!(),
+        for i in 1..col_count {
+            let index = i - 1;
+            let largest_col_member = chunks.clone().map(|chunk| {
+                if let Some(branch) = chunk.get(index) {
+                    branch.len()
+                } else {
+                    0
+                }
+            }).max().unwrap();
+            let next_col_start = largest_col_member + COLUMN_SPACER_LENGTH;
+            col_indices.push(next_col_start);
         }
 
         let rows: Vec<String> = self.vec.chunks(col_count)
@@ -68,7 +58,7 @@ fn make_row(chunks: &[String], col_indices: &Vec<usize>) -> String {
         3 => {
             format!("{b1:0$}{b2:1$}{b3}", col_indices[0], col_indices[1], b1 = chunks[0], b2 = chunks[1], b3 = chunks[2])
         },
-        _ => unreachable!()
+        _ => unreachable!("This code should never be reached!")
     }
 }
 
