@@ -103,7 +103,7 @@ fn print_warning(branches: &Branches, del_opt: &DeleteOption) {
 fn merged_branches(git_options: &GitOptions) -> Branches {
     let mut branches: Vec<String> = vec![];
     println!("Updating remote {}", git_options.remote);
-    run_command(&["git", "remote", "update", &git_options.remote, "--prune"]);
+    run_command_with_no_output(&["git", "remote", "update", &git_options.remote, "--prune"]);
 
     let merged_branches_regex = format!("\\*{branch}|\\s{branch}", branch = &git_options.base_branch);
     let merged_branches_filter = spawn_piped(&["grep", "-vE", &merged_branches_regex]);

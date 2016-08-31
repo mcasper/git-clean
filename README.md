@@ -117,11 +117,10 @@ Options:
 ```
 
 # Updating
-If you're updating from an older version of git-clean, just uninstall and then
-reinstall:
+If you're updating from an older version of git-clean, just run the install
+command with `--force`
 ```shell
-cargo uninstall git-clean
-cargo install git-clean
+cargo install git-clean --force
 ```
 
 # Use

@@ -16,6 +16,16 @@ pub fn spawn_piped(args: &[&str]) -> Child {
         .unwrap_or_else(|e| { panic!("Error with child process: {}", e) })
 }
 
+pub fn run_command_with_no_output(args: &[&str]) {
+    Command::new(&args[0])
+        .args(&args[1..])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .unwrap_or_else(|e| panic!("Error with command: {}", e));
+}
+
 pub fn run_command(args: &[&str]) -> Output {
     run_command_with_result(args)
         .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
