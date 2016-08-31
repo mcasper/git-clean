@@ -1,5 +1,6 @@
 git-clean
 ===========
+[![Build Status](https://travis-ci.org/mcasper/git-clean.svg?branch=master)](https://travis-ci.org/mcasper/git-clean)
 # The Problem
 If you work on one project for a long time, you're bound to amass a good number
 of branches. Deleting these branches locally whenever you're done with them
@@ -62,23 +63,30 @@ There's no possibility of deleting branches with valuable work on them, as it
 only deletes branches that are even with the base branch you specify (defaults
 to master).
 
+- Handles branches squashed by Github
+
+Github recently introduced the ability to squash your merges from the Github
+UI, which is a really handy tool to avoid manually rebasing all the time.
+`git-clean` knows how to recognize branches that have been squashed by Github,
+and will make sure they get cleaned out of your local repo.
+
 # Assumptions
 This tool assumes (but will also check) that your `git` is properly configured
 to push and pull from the current repository. `git-clean` should be run from
 the directory that holds the `.git` directory you care about.
 
-This tool will run the commands `git branch`, `git rev-parse`, `git remote` and
-`git push` on your system. `git push` will only ever be run as `git push origin
---delete 'remote_branch'`, when deleting remote branches for you. If that isn't
-acceptable, use the `-l` flag to only delete branches locally.
+This tool will run the `git` commands `branch`, `rev-parse`, `remote`, `pull`,
+and `push` on your system. `git push` will only ever be run as `git push
+<remote> --delete <branch>`, when deleting remote branches for you. If that
+isn't acceptable, use the `-l` flag to only delete branches locally.
 
 # Installation
 You will need Rust installed to run this tool, so head
 [here](https://www.rust-lang.org/downloads.html) to find the appropriate
 distribution for your machine.
 
-This was developed on Rust 1.10.0 stable, so if you're having issues with the
-compile/install step, make sure your Rust version is >= 1.10.0 stable.
+This was developed on Rust 1.11.0 stable, so if you're having issues with the
+compile/install step, make sure your Rust version is >= 1.11.0 stable.
 
 With Rust installed, we can now use the Rust package manager Cargo, to
 install git-clean:
@@ -101,12 +109,11 @@ Options:
     -l, --locals        only delete local branches
     -r, --remotes       only delete remote branches
     -y, --yes           skip the check for deleting branches
-    -R REMOTE           changes the git remote used (default is origin)
-    -b BRANCH           changes the base for merged branches (default is
+    -R, --remote REMOTE changes the git remote used (default is origin)
+    -b, --branch BRANCH changes the base for merged branches (default is
                         master)
     -h, --help          print this help menu
     -v, --version       print the version
-
 ```
 
 # Updating

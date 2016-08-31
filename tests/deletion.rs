@@ -2,7 +2,7 @@ use support::project;
 
 #[test]
 fn test_git_clean_works_with_merged_branches() {
-    let project = project("git-clean_squashed_merges").build();
+    let project = project("git-clean_squashed_merges").build().setup_remote();
 
     project.batch_setup_commands(
         &[
@@ -23,7 +23,7 @@ fn test_git_clean_works_with_merged_branches() {
 
 #[test]
 fn test_git_clean_works_with_squashed_merges() {
-    let project = project("git-clean_squashed_merges").build();
+    let project = project("git-clean_squashed_merges").build().setup_remote();
 
     project.batch_setup_commands(
         &[
