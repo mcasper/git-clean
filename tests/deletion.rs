@@ -52,7 +52,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
             "touch file2.txt",
             "git add .",
             "git commit -am Ahead",
-            "git push",
+            "git push origin HEAD",
             "git checkout master",
         ]
     );
@@ -78,7 +78,7 @@ fn test_git_clean_works_with_github_squashes() {
             "touch squash.txt",
             "git add .",
             "git commit -am Commit",
-            "git push",
+            "git push origin HEAD",
             "git checkout master",
             "touch squash.txt",
             "git add .",

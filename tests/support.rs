@@ -31,6 +31,7 @@ impl ProjectBuilder {
         project.batch_setup_commands(
             &[
                 "git init",
+                "git config push.default matching",
                 "git remote add origin remote",
                 "touch test_file.txt",
                 "git add .",

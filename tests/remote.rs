@@ -7,9 +7,9 @@ fn test_git_clean_removes_remote_branches() {
     project.batch_setup_commands(
         &[
             "git checkout -b test1",
-            "git push",
+            "git push origin HEAD",
             "git checkout -b test2",
-            "git push",
+            "git push origin HEAD",
             "git checkout master",
         ]
     );
