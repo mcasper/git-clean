@@ -1,4 +1,4 @@
-use std::process::{Command, Stdio, Child, Output};
+use std::process::{Command, Child, ExitStatus, Output, Stdio};
 use std::io::{Read, Write, Error as IOError};
 use std::collections::BTreeSet;
 
@@ -35,6 +35,12 @@ pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
     Command::new(&args[0])
         .args(&args[1..])
         .output()
+}
+
+pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
+    Command::new(&args[0])
+        .args(&args[1..])
+        .status()
 }
 
 pub fn validate_git_installation() -> Result<(), GitCleanError> {

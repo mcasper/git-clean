@@ -160,10 +160,17 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
         // diff. If there's no diff, then it has likely been merged with Github squashes, and we
         // can suggest it.
         run_command(&["git", "checkout", &branch]);
-        match run_command_with_result(&["git", "pull", &git_options.remote, &git_options.base_branch]) {
-            Ok(_) => (),
+        match run_command_with_status(&["git", "pull", &git_options.remote, &git_options.base_branch]) {
+            Ok(status) => {
+                if !status.success() {
+                    println!("Encountered error trying to update branch {}, skipping", branch);
+                    run_command(&["git", "reset", "--hard"]);
+                    continue;
+                }
+            }
             Err(err) => {
                 println!("Encountered error trying to update branch {} with branch {}: {}", branch, git_options.base_branch, err);
+                run_command(&["git", "reset", "--hard"]);
                 continue;
             }
         }
