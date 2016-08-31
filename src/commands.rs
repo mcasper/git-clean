@@ -1,12 +1,12 @@
 use std::process::{Command, Stdio, Child, Output};
-use std::io::{Read, Write};
+use std::io::{Read, Write, Error as IOError};
 use std::collections::BTreeSet;
 
 use branches::Branches;
 use error::GitCleanError;
 use options::GitOptions;
 
-pub fn spawn_piped(args: Vec<&str>) -> Child {
+pub fn spawn_piped(args: &[&str]) -> Child {
     Command::new(&args[0])
         .args(&args[1..])
         .stdin(Stdio::piped())
@@ -16,11 +16,15 @@ pub fn spawn_piped(args: Vec<&str>) -> Child {
         .unwrap_or_else(|e| { panic!("Error with child process: {}", e) })
 }
 
-pub fn run_command(args: Vec<&str>) -> Output {
+pub fn run_command(args: &[&str]) -> Output {
+    run_command_with_result(args)
+        .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
+}
+
+pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
     Command::new(&args[0])
         .args(&args[1..])
         .output()
-        .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
 }
 
 pub fn validate_git_installation() -> Result<(), GitCleanError> {
@@ -31,7 +35,7 @@ pub fn validate_git_installation() -> Result<(), GitCleanError> {
 }
 
 pub fn delete_local_branches(branches: &Branches) -> String {
-    let xargs = spawn_piped(vec!["xargs", "git", "branch", "-d"]);
+    let xargs = spawn_piped(&["xargs", "git", "branch", "-D"]);
 
     {
         xargs.stdin.unwrap().write_all(&branches.string.as_bytes()).unwrap()
@@ -43,9 +47,9 @@ pub fn delete_local_branches(branches: &Branches) -> String {
 }
 
 pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> String {
-    let xargs = spawn_piped(vec!["xargs", "git", "push", &git_options.remote, "--delete"]);
+    let xargs = spawn_piped(&["xargs", "git", "push", &git_options.remote, "--delete"]);
 
-    let remote_branches_cmd = run_command(vec!["git", "branch", "-r"]);
+    let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let all_remote_branches = s.split("\n").collect::<Vec<&str>>();
@@ -96,7 +100,7 @@ mod test {
 
     #[test]
     fn test_spawn_piped() {
-        let echo = spawn_piped(vec!["grep", "foo"]);
+        let echo = spawn_piped(&["grep", "foo"]);
 
         {
             echo.stdin.unwrap().write_all("foo\nbar\nbaz".as_bytes()).unwrap()

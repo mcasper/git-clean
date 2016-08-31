@@ -19,16 +19,19 @@ impl ProjectBuilder {
     }
 
     pub fn build(self) -> Project {
-        let tempdir = TempDir::new(&self.name).unwrap();
+        let work_dir = TempDir::new(&self.name).unwrap();
+        let remote_dir = TempDir::new(&format!("{}_remote", &self.name)).unwrap();
 
         let project = Project {
-            directory: tempdir,
+            directory: work_dir,
             name: self.name,
+            remote: remote_dir,
         };
 
         project.batch_setup_commands(
-            vec![
+            &[
                 "git init",
+                "git config push.default matching",
                 "git remote add origin remote",
                 "touch test_file.txt",
                 "git add .",
@@ -43,6 +46,7 @@ impl ProjectBuilder {
 pub struct Project {
     directory: TempDir,
     pub name: String,
+    remote: TempDir,
 }
 
 impl Project {
@@ -61,7 +65,22 @@ impl Project {
         result
     }
 
-    pub fn batch_setup_commands(&self, commands: Vec<&str>) {
+    pub fn remote_setup_command(&self, command: &str) -> TestCommandResult {
+        let command_pieces = command.split(" ").collect::<Vec<&str>>();
+        let result = TestCommand::new(
+            &self.remote_path(),
+            command_pieces[1..].to_vec(),
+            command_pieces[0]
+            ).run();
+
+        if !result.is_success() {
+            panic!(result.failure_message("remote setup command to succeed"))
+        }
+
+        result
+    }
+
+    pub fn batch_setup_commands(&self, commands: &[&str]) {
         commands.iter().map(|command| self.setup_command(command)).collect::<Vec<TestCommandResult>>();
     }
 
@@ -72,6 +91,19 @@ impl Project {
 
     fn path(&self) -> PathBuf {
         self.directory.path().into()
+    }
+
+    fn remote_path(&self) -> PathBuf {
+        self.remote.path().into()
+    }
+
+    pub fn setup_remote(self) -> Project {
+        self.remote_setup_command("git init");
+        self.remote_setup_command("git checkout -b other");
+
+        self.setup_command(&format!("git remote set-url origin {}", self.remote_path().display()));
+
+        self
     }
 }
 
