@@ -5,3 +5,4 @@ mod support;
 
 // Actual integration tests
 mod local;
+mod remote;

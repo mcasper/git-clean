@@ -35,7 +35,7 @@ pub fn validate_git_installation() -> Result<(), GitCleanError> {
 }
 
 pub fn delete_local_branches(branches: &Branches) -> String {
-    let xargs = spawn_piped(&["xargs", "git", "branch", "-d"]);
+    let xargs = spawn_piped(&["xargs", "git", "branch", "-D"]);
 
     {
         xargs.stdin.unwrap().write_all(&branches.string.as_bytes()).unwrap()

@@ -19,12 +19,13 @@ impl ProjectBuilder {
     }
 
     pub fn build(self) -> Project {
-        let tempdir = TempDir::new(&self.name).unwrap();
+        let work_dir = TempDir::new(&self.name).unwrap();
+        let remote_dir = TempDir::new(&format!("{}_remote", &self.name)).unwrap();
 
         let project = Project {
-            directory: tempdir,
+            directory: work_dir,
             name: self.name,
-            remote: None,
+            remote: remote_dir,
         };
 
         project.batch_setup_commands(
@@ -44,7 +45,7 @@ impl ProjectBuilder {
 pub struct Project {
     directory: TempDir,
     pub name: String,
-    remote: Option<TempDir>,
+    remote: TempDir,
 }
 
 impl Project {
@@ -63,6 +64,21 @@ impl Project {
         result
     }
 
+    pub fn remote_setup_command(&self, command: &str) -> TestCommandResult {
+        let command_pieces = command.split(" ").collect::<Vec<&str>>();
+        let result = TestCommand::new(
+            &self.remote_path(),
+            command_pieces[1..].to_vec(),
+            command_pieces[0]
+            ).run();
+
+        if !result.is_success() {
+            panic!(result.failure_message("remote setup command to succeed"))
+        }
+
+        result
+    }
+
     pub fn batch_setup_commands(&self, commands: &[&str]) {
         commands.iter().map(|command| self.setup_command(command)).collect::<Vec<TestCommandResult>>();
     }
@@ -76,20 +92,15 @@ impl Project {
         self.directory.path().into()
     }
 
-    pub fn setup_remote(mut self) -> Project {
-        let tempdir = TempDir::new(&format!("{}_remote", &self.name)).unwrap();
+    fn remote_path(&self) -> PathBuf {
+        self.remote.path().into()
+    }
 
-        // For lifetime scoping, we want the remote to live as long as the project does
-        let tempdir_path = tempdir.path().to_owned().clone();
-        self.remote = Some(tempdir);
+    pub fn setup_remote(self) -> Project {
+        self.remote_setup_command("git init");
+        self.remote_setup_command("git checkout -b other");
 
-        Command::new("git")
-            .arg("init")
-            .current_dir(&tempdir_path)
-            .output()
-            .unwrap();
-
-        self.setup_command(&format!("git remote set-url origin {}", tempdir_path.display()));
+        self.setup_command(&format!("git remote set-url origin {}", self.remote_path().display()));
 
         self
     }

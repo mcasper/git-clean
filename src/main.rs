@@ -1,4 +1,4 @@
-#[deny(warnings)]
+#![deny(warnings)]
 
 extern crate getopts;
 
@@ -151,7 +151,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
         // If it does exist in the remote, check to see if it's listed in git branches --merged. If
         // it is, that means it wasn't merged using Github squashes, and we can suggest it.
-        if !merged_branches.contains(&branch) {
+        if merged_branches.contains(&branch) {
             branches.push(branch.to_owned());
             continue;
         }
@@ -168,12 +168,14 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
             }
         }
         let git_diff_cmd = run_command(&["git", "diff", &git_options.base_branch]);
-        let git_diff_output = String::from_utf8(git_diff_cmd.stdout).unwrap();
+        let git_diff = String::from_utf8(git_diff_cmd.stdout).unwrap();
 
         // If there's no diff with the base branch, suggest it.
-        if git_diff_output.trim().len() == 0 {
+        if git_diff.trim().len() == 0 {
             branches.push(branch.to_owned());
         }
+
+        run_command(&["git", "checkout", &git_options.base_branch]);
     }
 
     // if deleted in remote, list
@@ -189,9 +191,9 @@ fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &Gi
         DeleteOption::Local => delete_local_branches(branches),
         DeleteOption::Remote => delete_remote_branches(branches, git_options),
         DeleteOption::Both => {
-            let out1 = delete_remote_branches(branches, git_options);
-            let out2 = delete_local_branches(branches);
-            ["Remote:".to_owned(), out1, "\nLocal:".to_owned(), out2].join("\n")
+            let local_output = delete_local_branches(branches);
+            let remote_output = delete_remote_branches(branches, git_options);
+            ["Remote:".to_owned(), remote_output, "\nLocal:".to_owned(), local_output].join("\n")
         },
     }
 }

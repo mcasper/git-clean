@@ -14,7 +14,7 @@ fn test_git_clean_checks_for_git_in_path() {
 
 #[test]
 fn test_git_clean_removes_local_branches() {
-    let project = project("git-clean_removes").build();
+    let project = project("git-clean_removes_local").build();
 
     project.setup_command("git branch test1");
     project.setup_command("git branch test2");
@@ -75,7 +75,7 @@ fn test_git_clean_works_with_squashed_merges() {
 
 #[test]
 fn test_git_clean_does_not_delete_branches_ahead_of_master() {
-    let project = project("git-clean_branch_ahead").build();
+    let project = project("git-clean_branch_ahead").build().setup_remote();
 
     project.batch_setup_commands(
         &[
@@ -83,6 +83,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
             "touch file2.txt",
             "git add .",
             "git commit -am Ahead",
+            "git push",
             "git checkout master",
         ]
     );
@@ -94,7 +95,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
 }
 
 #[test]
-fn test_git_clean_works_with_github_squahes() {
+fn test_git_clean_works_with_github_squashes() {
     let project = project("git-clean_github_squashes").build().setup_remote();
 
     // Github squashes function basically like a normal squashed merge, it creates an entirely new
@@ -116,6 +117,7 @@ fn test_git_clean_works_with_github_squahes() {
             "touch new.txt",
             "git add .",
             "git commit -am Other",
+            "git push origin HEAD"
         ]
     );
 
