@@ -165,12 +165,14 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
                 if !status.success() {
                     println!("Encountered error trying to update branch {}, skipping", branch);
                     run_command(&["git", "reset", "--hard"]);
+                    run_command(&["git", "checkout", &git_options.base_branch]);
                     continue;
                 }
             }
             Err(err) => {
                 println!("Encountered error trying to update branch {} with branch {}: {}", branch, git_options.base_branch, err);
                 run_command(&["git", "reset", "--hard"]);
+                run_command(&["git", "checkout", &git_options.base_branch]);
                 continue;
             }
         }
