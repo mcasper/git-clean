@@ -40,6 +40,9 @@ pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
 pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
     Command::new(&args[0])
         .args(&args[1..])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
 }
 
