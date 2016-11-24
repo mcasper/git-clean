@@ -81,23 +81,24 @@ and `push` on your system. `git push` will only ever be run as `git push
 isn't acceptable, use the `-l` flag to only delete branches locally.
 
 # Installation
-You will need Rust installed to run this tool, so head
-[here](https://www.rust-lang.org/downloads.html) to find the appropriate
-distribution for your machine.
-
-This was developed on Rust 1.11.0 stable, so if you're having issues with the
-compile/install step, make sure your Rust version is >= 1.11.0 stable.
-
-With Rust installed, we can now use the Rust package manager Cargo, to
-install git-clean:
+If you're a Rust developer, you can install using Cargo:
 ```shell
 cargo install git-clean
 ```
+This was developed on Rust 1.11.0 stable, so if you're having issues with the
+compile/install step, make sure your Rust version is >= 1.11.0 stable.
 
 Be sure to add the installation path to your PATH variable. For me, it's
 downloaded to:
 ```
 /Users/mattcasper/.multirust/toolchains/stable/cargo/bin/git-clean
+```
+
+If you're not a Rust developer, or just prefer another way, there's also
+a homebrew formula:
+```shell
+brew tap mcasper/formulae
+brew install git-clean
 ```
 
 Verify that it works!:
@@ -117,8 +118,8 @@ Options:
 ```
 
 # Updating
-If you're updating from an older version of git-clean, just run the install
-command with `--force`
+If you're updating from an older version of git-clean, and using Cargo to
+install, just run the install command with `--force`:
 ```shell
 cargo install git-clean --force
 ```
