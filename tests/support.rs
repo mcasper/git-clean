@@ -1,6 +1,6 @@
-use std::{env, str};
 use std::path::{PathBuf, Path};
 use std::process::{Command, Output};
+use std::{env, str};
 use tempdir::TempDir;
 
 pub fn project(name: &str) -> ProjectBuilder {
@@ -158,26 +158,26 @@ impl TestCommandResult {
         self.output.status.success()
     }
 
-     pub fn stdout(&self) -> &str {
-          str::from_utf8(&self.output.stdout).unwrap()
-     }
+    pub fn stdout(&self) -> &str {
+        str::from_utf8(&self.output.stdout).unwrap()
+    }
 
-     pub fn stderr(&self) -> &str {
-          str::from_utf8(&self.output.stderr).unwrap()
-     }
+    pub fn stderr(&self) -> &str {
+        str::from_utf8(&self.output.stderr).unwrap()
+    }
 
-     pub fn failure_message(&self, expectation: &str) -> String {
-         format!("Expected {}, instead found\nstdout: {}\nstderr: {}\n",
-                 expectation,
-                 self.stdout(),
-                 self.stderr())
-     }
+    pub fn failure_message(&self, expectation: &str) -> String {
+        format!("Expected {}, instead found\nstdout: {}\nstderr: {}\n",
+                expectation,
+                self.stdout(),
+                self.stderr())
+    }
 }
 
 fn path_to_git_clean() -> String {
     let path = Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap())
         .join("target")
-        .join("release")
+        .join("debug")
         .join("git-clean")
         .to_str().unwrap()
         .to_owned();
