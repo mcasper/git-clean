@@ -17,13 +17,13 @@ pub use self::DeleteOption::*;
 
 impl DeleteOption {
     pub fn new(opts: &Matches) -> DeleteOption {
-        return if opts.opt_present("l") {
+        if opts.opt_present("l") {
             Local
         } else if opts.opt_present("r") {
             Remote
         } else {
             Both
-        };
+        }
     }
 
     pub fn warning_message(&self) -> String {
@@ -79,7 +79,7 @@ impl GitOptions {
         let mut s = String::new();
         grep.stdout.unwrap().read_to_string(&mut s).unwrap();
 
-        if s.len() == 0 {
+        if s.is_empty() {
             return Err(GitCleanError::InvalidRemoteError)
         }
 

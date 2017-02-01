@@ -8,7 +8,7 @@ pub struct Branches {
 
 impl Branches {
     pub fn new(branches: Vec<String>) -> Branches {
-        let trimmed_string = branches.join("\n").trim_right_matches("\n").into();
+        let trimmed_string = branches.join("\n").trim_right_matches('\n').into();
 
         Branches {
             string: trimmed_string,
@@ -28,7 +28,7 @@ impl Branches {
         };
 
         let chunks = self.vec.chunks(col_count);
-        let mut col_indices = vec![];
+        let mut col_indices = [0; 3];
 
         for i in 1..col_count {
             let index = i - 1;
@@ -40,7 +40,7 @@ impl Branches {
                 }
             }).max().unwrap();
             let next_col_start = largest_col_member + COLUMN_SPACER_LENGTH;
-            col_indices.push(next_col_start);
+            col_indices[i-1] = next_col_start;
         }
 
         let rows: Vec<String> = self.vec.chunks(col_count)
@@ -50,7 +50,7 @@ impl Branches {
     }
 }
 
-fn make_row(chunks: &[String], col_indices: &Vec<usize>) -> String {
+fn make_row(chunks: &[String], col_indices: &[usize]) -> String {
     match chunks.len() {
         1 => { chunks[0].clone() },
         2 => { format!("{b1:0$}{b2}", col_indices[0], b1 = chunks[0], b2 = chunks[1]) },

@@ -60,7 +60,7 @@ fn main() {
 
     let branches = merged_branches(&git_options);
 
-    if branches.string.len() == 0 {
+    if branches.string.is_empty() {
         println!("No branches to delete, you're clean!");
         return;
     }
@@ -75,9 +75,7 @@ fn main() {
         io::stdin().read_line(&mut input).unwrap();
 
         match input.to_lowercase().as_ref() {
-            "y\n" => (),
-            "yes\n" => (),
-            "\n" => (),
+            "y\n" | "yes\n" | "\n" => (),
             _ => return,
         }
     }
@@ -116,7 +114,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut merged_branches_output = String::new();
     merged_branches_filter.stdout.unwrap().read_to_string(&mut merged_branches_output).unwrap();
-    let merged_branches = merged_branches_output.split("\n").map(|b| b.trim().into()).collect::<Vec<String>>();
+    let merged_branches = merged_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
 
     let local_branches_regex = format!("\\*{branch}|\\s{branch}", branch = &git_options.base_branch);
     let local_branches_filter = spawn_piped(&["grep", "-vE", &local_branches_regex]);
@@ -128,7 +126,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut local_branches_output = String::new();
     local_branches_filter.stdout.unwrap().read_to_string(&mut local_branches_output).unwrap();
-    let local_branches = local_branches_output.split("\n").map(|b| b.trim().into()).collect::<Vec<String>>();
+    let local_branches = local_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
 
     let remote_branches_regex = format!("(HEAD|{})", &git_options.base_branch);
     let remote_branches_filter = spawn_piped(&["grep", "-vE", &remote_branches_regex]);
@@ -140,7 +138,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut remote_branches_output = String::new();
     remote_branches_filter.stdout.unwrap().read_to_string(&mut remote_branches_output).unwrap();
-    let remote_branches = remote_branches_output.split("\n").map(|b| b.trim().into()).collect::<Vec<String>>();
+    let remote_branches = remote_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
 
     for branch in local_branches {
         // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest

@@ -57,7 +57,7 @@ pub fn delete_local_branches(branches: &Branches) -> String {
     let xargs = spawn_piped(&["xargs", "git", "branch", "-D"]);
 
     {
-        xargs.stdin.unwrap().write_all(&branches.string.as_bytes()).unwrap()
+        xargs.stdin.unwrap().write_all(branches.string.as_bytes()).unwrap()
     }
 
     let mut branches_delete_result = String::new();
@@ -71,7 +71,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
     let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
-    let all_remote_branches = s.split("\n").collect::<Vec<&str>>();
+    let all_remote_branches = s.split('\n').collect::<Vec<&str>>();
     let origin_for_trim = &format!("{}/", &git_options.remote)[..];
     let b_tree_remotes = all_remote_branches
         .iter()
@@ -94,7 +94,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
     xargs.stderr.unwrap().read_to_string(&mut stderr).unwrap();
 
     // Everything is written to stderr, so we need to process that
-    let split = stderr.split("\n");
+    let split = stderr.split('\n');
     let vec: Vec<&str> = split.collect();
     let mut output = vec![];
     for s in vec {
