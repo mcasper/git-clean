@@ -51,7 +51,7 @@ pub struct Project {
 
 impl Project {
     pub fn setup_command(&self, command: &str) -> TestCommandResult {
-        let command_pieces = command.split(" ").collect::<Vec<&str>>();
+        let command_pieces = command.split(' ').collect::<Vec<&str>>();
         let result = TestCommand::new(
             &self.path(),
             command_pieces[1..].to_vec(),
@@ -66,7 +66,7 @@ impl Project {
     }
 
     pub fn remote_setup_command(&self, command: &str) -> TestCommandResult {
-        let command_pieces = command.split(" ").collect::<Vec<&str>>();
+        let command_pieces = command.split(' ').collect::<Vec<&str>>();
         let result = TestCommand::new(
             &self.remote_path(),
             command_pieces[1..].to_vec(),
@@ -81,11 +81,13 @@ impl Project {
     }
 
     pub fn batch_setup_commands(&self, commands: &[&str]) {
-        commands.iter().map(|command| self.setup_command(command)).collect::<Vec<TestCommandResult>>();
+        for command in commands.iter() {
+            self.setup_command(command);
+        };
     }
 
     pub fn git_clean_command(&self, command: &str) -> TestCommand {
-        let command_pieces = command.split(" ").collect::<Vec<&str>>();
+        let command_pieces = command.split(' ').collect::<Vec<&str>>();
         TestCommand::new(&self.path(), command_pieces, path_to_git_clean())
     }
 
@@ -134,7 +136,7 @@ impl TestCommand {
 
     pub fn run(&self) -> TestCommandResult {
         let mut command = Command::new(&self.top_level_command);
-        for &(ref k, ref v) in self.envs.iter() {
+        for &(ref k, ref v) in &self.envs {
             command.env(&k, &v);
         }
         let output = command
