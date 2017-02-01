@@ -102,6 +102,7 @@ impl Project {
         self.remote_setup_command("git checkout -b other");
 
         self.setup_command(&format!("git remote set-url origin {}", self.remote_path().display()));
+        self.setup_command("git push origin HEAD");
 
         self
     }
