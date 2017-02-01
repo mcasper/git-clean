@@ -175,7 +175,8 @@ impl TestCommandResult {
 }
 
 fn path_to_git_clean() -> String {
-    Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap())
+    let base = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|error| panic!("Why? {:?}", error));
+    Path::new(&base)
         .join("target")
         .join("release")
         .join("git-clean")
