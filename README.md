@@ -85,8 +85,8 @@ If you're a Rust developer, you can install using Cargo:
 ```shell
 cargo install git-clean
 ```
-This was developed on Rust 1.11.0 stable, so if you're having issues with the
-compile/install step, make sure your Rust version is >= 1.11.0 stable.
+This was developed on Rust 1.14.0 stable, so if you're having issues with the
+compile/install step, make sure your Rust version is >= 1.14.0 stable.
 
 Be sure to add the installation path to your PATH variable. For me, it's
 downloaded to:
@@ -110,6 +110,7 @@ Options:
     -l, --locals        only delete local branches
     -r, --remotes       only delete remote branches
     -y, --yes           skip the check for deleting branches
+    -s, --squashes      check for squashes by finding branches incompatible with master
     -R, --remote REMOTE changes the git remote used (default is origin)
     -b, --branch BRANCH changes the base for merged branches (default is
                         master)

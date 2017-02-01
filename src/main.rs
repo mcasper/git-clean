@@ -28,6 +28,7 @@ fn main() {
     opts.optflag("l", "locals", "only delete local branches");
     opts.optflag("r", "remotes", "only delete remote branches");
     opts.optflag("y", "yes", "skip the check for deleting branches");
+    opts.optflag("s", "squashes", "check for squashes by finding branches incompatible with master");
     opts.optopt("R", "remote", "changes the git remote used (default is origin)", "REMOTE");
     opts.optopt("b", "branch", "changes the base for merged branches (default is master)", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
@@ -156,35 +157,27 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
             continue;
         }
 
-        // If neither of the above matched, merge master into the branch and see if there's any
-        // diff. If there's no diff, then it has likely been merged with Github squashes, and we
+        // If neither of the above matched, merge master into the branch and see if it succeeds.
+        // If it can't cleanly merge, then it has likely been merged with Github squashes, and we
         // can suggest it.
-        run_command(&["git", "checkout", &branch]);
-        match run_command_with_status(&["git", "pull", "--ff-only", &git_options.remote, &git_options.base_branch]) {
-            Ok(status) => {
-                if !status.success() {
-                    println!("Encountered error trying to update branch {}, skipping", branch);
-                    run_command(&["git", "reset", "--hard"]);
-                    run_command(&["git", "checkout", &git_options.base_branch]);
+        if git_options.squashes {
+            run_command(&["git", "checkout", &branch]);
+            match run_command_with_status(&["git", "pull", "--ff-only", &git_options.remote, &git_options.base_branch]) {
+                Ok(status) => {
+                    if !status.success() {
+                        println!("why");
+                        branches.push(branch.into());
+                    }
+                }
+                Err(err) => {
+                    println!("Encountered error trying to update branch {} with branch {}: {}", branch, git_options.base_branch, err);
                     continue;
                 }
             }
-            Err(err) => {
-                println!("Encountered error trying to update branch {} with branch {}: {}", branch, git_options.base_branch, err);
-                run_command(&["git", "reset", "--hard"]);
-                run_command(&["git", "checkout", &git_options.base_branch]);
-                continue;
-            }
-        }
-        let git_diff_cmd = run_command(&["git", "diff", &git_options.base_branch]);
-        let git_diff = String::from_utf8(git_diff_cmd.stdout).unwrap();
 
-        // If there's no diff with the base branch, suggest it.
-        if git_diff.trim().len() == 0 {
-            branches.push(branch.to_owned());
+            run_command(&["git", "reset", "--hard"]);
+            run_command(&["git", "checkout", &git_options.base_branch]);
         }
-
-        run_command(&["git", "checkout", &git_options.base_branch]);
     }
 
     // if deleted in remote, list

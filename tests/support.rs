@@ -1,6 +1,6 @@
-use std::{env, str};
 use std::path::{PathBuf, Path};
 use std::process::{Command, Output};
+use std::{env, str};
 use tempdir::TempDir;
 
 pub fn project(name: &str) -> ProjectBuilder {
@@ -102,6 +102,7 @@ impl Project {
         self.remote_setup_command("git checkout -b other");
 
         self.setup_command(&format!("git remote set-url origin {}", self.remote_path().display()));
+        self.setup_command("git push origin HEAD");
 
         self
     }
@@ -157,27 +158,29 @@ impl TestCommandResult {
         self.output.status.success()
     }
 
-     pub fn stdout(&self) -> &str {
-          str::from_utf8(&self.output.stdout).unwrap()
-     }
+    pub fn stdout(&self) -> &str {
+        str::from_utf8(&self.output.stdout).unwrap()
+    }
 
-     pub fn stderr(&self) -> &str {
-          str::from_utf8(&self.output.stderr).unwrap()
-     }
+    pub fn stderr(&self) -> &str {
+        str::from_utf8(&self.output.stderr).unwrap()
+    }
 
-     pub fn failure_message(&self, expectation: &str) -> String {
-         format!("Expected {}, instead found\nstdout: {}\nstderr: {}\n",
-                 expectation,
-                 self.stdout(),
-                 self.stderr(),
-                 )
-     }
+    pub fn failure_message(&self, expectation: &str) -> String {
+        format!("Expected {}, instead found\nstdout: {}\nstderr: {}\n",
+                expectation,
+                self.stdout(),
+                self.stderr())
+    }
 }
 
 fn path_to_git_clean() -> String {
-    env::current_exe().unwrap()
-        .parent().unwrap()
+    let path = Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap())
+        .join("target")
+        .join("debug")
         .join("git-clean")
         .to_str().unwrap()
-        .to_owned()
+        .to_owned();
+    println!("Path is: {:?}", path);
+    path
 }
