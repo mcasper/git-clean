@@ -9,10 +9,10 @@ homepage = "https://github.com/mcasper/git-clean"
 repository = "https://github.com/mcasper/git-clean"
 
 [dependencies]
-getopts = "0.2.14"
+getopts = "0.2"
 
 [dev-dependencies]
-tempdir = "0.3.5"
+tempdir = "0.3"
 
 [[test]]
 name = "tests"

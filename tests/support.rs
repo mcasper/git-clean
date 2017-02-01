@@ -170,14 +170,14 @@ impl TestCommandResult {
          format!("Expected {}, instead found\nstdout: {}\nstderr: {}\n",
                  expectation,
                  self.stdout(),
-                 self.stderr(),
-                 )
+                 self.stderr())
      }
 }
 
 fn path_to_git_clean() -> String {
-    env::current_exe().unwrap()
-        .parent().unwrap()
+    Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap())
+        .join("target")
+        .join("release")
         .join("git-clean")
         .to_str().unwrap()
         .to_owned()
