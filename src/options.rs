@@ -40,6 +40,7 @@ pub struct GitOptions {
     pub remote: String,
     pub base_branch: String,
     pub squashes: bool,
+    pub ignored_branches: Vec<String>,
 }
 
 impl GitOptions {
@@ -52,11 +53,13 @@ impl GitOptions {
             Some(branch) => branch,
             None => "master".to_owned(),
         };
+        let ignored_branches = opts.opt_strs("i");
         let squashes = opts.opt_present("squashes");
 
         GitOptions {
             remote: remote,
             base_branch: base_branch,
+            ignored_branches: ignored_branches,
             squashes: squashes,
         }
     }
@@ -99,6 +102,7 @@ mod test {
         opts.optflag("r", "remotes", "only delete remote branches");
         opts.optopt("R", "", "changes the git remote used (default is origin)", "REMOTE");
         opts.optopt("b", "", "changes the base for merged branches (default is master)", "BRANCH");
+        opts.optmulti("i", "", "ignored branch", "BRANCH");
         opts.optflag("", "squashes", "");
         opts.optflag("h", "help", "print this help menu");
 
