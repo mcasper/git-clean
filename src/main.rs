@@ -31,6 +31,7 @@ fn main() {
     opts.optflag("s", "squashes", "check for squashes by finding branches incompatible with master");
     opts.optopt("R", "remote", "changes the git remote used (default is origin)", "REMOTE");
     opts.optopt("b", "branch", "changes the base for merged branches (default is master)", "BRANCH");
+    opts.optmulti("i", "ignore", "ignores given branches", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("v", "version", "print the version");
 
@@ -126,7 +127,11 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut local_branches_output = String::new();
     local_branches_filter.stdout.unwrap().read_to_string(&mut local_branches_output).unwrap();
-    let local_branches = local_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+
+    let local_branches = local_branches_output.split('\n')
+                                              .map(|b| b.trim().into())
+                                              .filter(|branch| !git_options.ignored_branches.contains(&branch))
+                                              .collect::<Vec<String>>();
 
     let remote_branches_regex = format!("(HEAD|{})", &git_options.base_branch);
     let remote_branches_filter = spawn_piped(&["grep", "-vE", &remote_branches_regex]);
