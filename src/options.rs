@@ -42,9 +42,11 @@ pub struct GitOptions {
 
 impl GitOptions {
     pub fn new(opts: &Matches) -> GitOptions {
+        let default_remote = "origin".to_owned();
+        let default_base_branch = "master".to_owned();
         GitOptions {
-            remote: opts.opt_str("R").unwrap_or("origin".to_owned()),
-            base_branch: opts.opt_str("b").unwrap_or("master".to_owned()),
+            remote: opts.opt_str("R").unwrap_or(default_remote),
+            base_branch: opts.opt_str("b").unwrap_or(default_base_branch),
             ignored_branches: opts.opt_strs("i"),
             squashes: opts.opt_present("squashes"),
         }
