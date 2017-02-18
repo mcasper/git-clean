@@ -130,7 +130,7 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let local_branches = local_branches_output.split('\n')
                                               .map(|b| b.trim().into())
-                                              .filter(|branch| !git_options.ignored_branches.contains(&branch))
+                                              .filter(|branch| !git_options.ignored_branches.contains(branch))
                                               .collect::<Vec<String>>();
 
     let remote_branches_regex = format!("(HEAD|{})", &git_options.base_branch);

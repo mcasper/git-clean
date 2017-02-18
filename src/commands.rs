@@ -26,6 +26,11 @@ pub fn run_command_with_no_output(args: &[&str]) {
         .unwrap_or_else(|e| panic!("Error with command: {}", e));
 }
 
+pub fn output(args: &[&str]) -> String {
+    let result = run_command(args);
+    String::from_utf8(result.stdout).unwrap().trim().to_owned()
+}
+
 pub fn run_command(args: &[&str]) -> Output {
     run_command_with_result(args)
         .unwrap_or_else(|e| { panic!("Error with command: {}", e) })

@@ -1,10 +1,7 @@
-use getopts::{Matches};
-
-use std::io::{Read, Write};
-
-use commands::{spawn_piped, run_command};
-
+use commands::{spawn_piped, output, run_command};
 use error::GitCleanError;
+use getopts::{Matches};
+use std::io::{Read, Write};
 
 #[derive(Debug)]
 pub enum DeleteOption {
@@ -45,33 +42,31 @@ pub struct GitOptions {
 
 impl GitOptions {
     pub fn new(opts: &Matches) -> GitOptions {
-        let remote = match opts.opt_str("R") {
-            Some(remote) => remote,
-            None => "origin".to_owned(),
-        };
-        let base_branch = match opts.opt_str("b") {
-            Some(branch) => branch,
-            None => "master".to_owned(),
-        };
-        let ignored_branches = opts.opt_strs("i");
-        let squashes = opts.opt_present("squashes");
-
         GitOptions {
-            remote: remote,
-            base_branch: base_branch,
-            ignored_branches: ignored_branches,
-            squashes: squashes,
+            remote: opts.opt_str("R").unwrap_or("origin".to_owned()),
+            base_branch: opts.opt_str("b").unwrap_or("master".to_owned()),
+            ignored_branches: opts.opt_strs("i"),
+            squashes: opts.opt_present("squashes"),
         }
     }
 
     pub fn validate(&self) -> Result<(), GitCleanError> {
-        let current_branch_command = run_command(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
-        let current_branch = String::from_utf8(current_branch_command.stdout).unwrap();
+        try!(self.validate_base_branch());
+        try!(self.validate_remote());
+        Ok(())
+    }
 
-        if current_branch.trim() != self.base_branch {
+    fn validate_base_branch(&self) -> Result<(), GitCleanError> {
+        let current_branch = output(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
+
+        if current_branch != self.base_branch {
             return Err(GitCleanError::CurrentBranchInvalidError)
         };
 
+        Ok(())
+    }
+
+    fn validate_remote(&self) -> Result<(), GitCleanError> {
         let grep = spawn_piped(&["grep", &self.remote]);
         let remotes = run_command(&["git", "remote"]);
 
@@ -79,10 +74,10 @@ impl GitOptions {
             grep.stdin.unwrap().write_all(&remotes.stdout).unwrap();
         }
 
-        let mut s = String::new();
-        grep.stdout.unwrap().read_to_string(&mut s).unwrap();
+        let mut remote_result = String::new();
+        grep.stdout.unwrap().read_to_string(&mut remote_result).unwrap();
 
-        if s.is_empty() {
+        if remote_result.is_empty() {
             return Err(GitCleanError::InvalidRemoteError)
         }
 
