@@ -28,9 +28,17 @@ fn main() {
     opts.optflag("l", "locals", "only delete local branches");
     opts.optflag("r", "remotes", "only delete remote branches");
     opts.optflag("y", "yes", "skip the check for deleting branches");
-    opts.optflag("s", "squashes", "check for squashes by finding branches incompatible with master");
-    opts.optopt("R", "remote", "changes the git remote used (default is origin)", "REMOTE");
-    opts.optopt("b", "branch", "changes the base for merged branches (default is master)", "BRANCH");
+    opts.optflag("s",
+                 "squashes",
+                 "check for squashes by finding branches incompatible with master");
+    opts.optopt("R",
+                "remote",
+                "changes the git remote used (default is origin)",
+                "REMOTE");
+    opts.optopt("b",
+                "branch",
+                "changes the base for merged branches (default is master)",
+                "BRANCH");
     opts.optmulti("i", "ignore", "ignores given branches", "BRANCH");
     opts.optflag("h", "help", "print this help menu");
     opts.optflag("v", "version", "print the version");
@@ -105,7 +113,8 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     println!("Updating remote {}", git_options.remote);
     run_command_with_no_output(&["git", "remote", "update", &git_options.remote, "--prune"]);
 
-    let merged_branches_regex = format!("\\*{branch}|\\s{branch}", branch = &git_options.base_branch);
+    let merged_branches_regex = format!("\\*{branch}|\\s{branch}",
+                                        branch = &git_options.base_branch);
     let merged_branches_filter = spawn_piped(&["grep", "-vE", &merged_branches_regex]);
     let merged_branches_cmd = run_command(&["git", "branch", "--merged"]);
 
@@ -115,9 +124,11 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut merged_branches_output = String::new();
     merged_branches_filter.stdout.unwrap().read_to_string(&mut merged_branches_output).unwrap();
-    let merged_branches = merged_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+    let merged_branches =
+        merged_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
 
-    let local_branches_regex = format!("\\*{branch}|\\s{branch}", branch = &git_options.base_branch);
+    let local_branches_regex = format!("\\*{branch}|\\s{branch}",
+                                       branch = &git_options.base_branch);
     let local_branches_filter = spawn_piped(&["grep", "-vE", &local_branches_regex]);
     let local_branches_cmd = run_command(&["git", "branch"]);
 
@@ -129,9 +140,9 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     local_branches_filter.stdout.unwrap().read_to_string(&mut local_branches_output).unwrap();
 
     let local_branches = local_branches_output.split('\n')
-                                              .map(|b| b.trim().into())
-                                              .filter(|branch| !git_options.ignored_branches.contains(branch))
-                                              .collect::<Vec<String>>();
+        .map(|b| b.trim().into())
+        .filter(|branch| !git_options.ignored_branches.contains(branch))
+        .collect::<Vec<String>>();
 
     let remote_branches_regex = format!("(HEAD|{})", &git_options.base_branch);
     let remote_branches_filter = spawn_piped(&["grep", "-vE", &remote_branches_regex]);
@@ -143,7 +154,8 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
 
     let mut remote_branches_output = String::new();
     remote_branches_filter.stdout.unwrap().read_to_string(&mut remote_branches_output).unwrap();
-    let remote_branches = remote_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+    let remote_branches =
+        remote_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
 
     for branch in local_branches {
         // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
@@ -165,7 +177,11 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
         // can suggest it.
         if git_options.squashes {
             run_command(&["git", "checkout", &branch]);
-            match run_command_with_status(&["git", "pull", "--ff-only", &git_options.remote, &git_options.base_branch]) {
+            match run_command_with_status(&["git",
+                                            "pull",
+                                            "--ff-only",
+                                            &git_options.remote,
+                                            &git_options.base_branch]) {
                 Ok(status) => {
                     if !status.success() {
                         println!("why");
@@ -173,7 +189,10 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
                     }
                 }
                 Err(err) => {
-                    println!("Encountered error trying to update branch {} with branch {}: {}", branch, git_options.base_branch, err);
+                    println!("Encountered error trying to update branch {} with branch {}: {}",
+                             branch,
+                             git_options.base_branch,
+                             err);
                     continue;
                 }
             }
@@ -191,7 +210,10 @@ fn merged_branches(git_options: &GitOptions) -> Branches {
     Branches::new(branches)
 }
 
-fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &GitOptions) -> String {
+fn delete_branches(branches: &Branches,
+                   options: &DeleteOption,
+                   git_options: &GitOptions)
+                   -> String {
     match *options {
         DeleteOption::Local => delete_local_branches(branches),
         DeleteOption::Remote => delete_remote_branches(branches, git_options),
@@ -199,7 +221,7 @@ fn delete_branches(branches: &Branches, options: &DeleteOption, git_options: &Gi
             let local_output = delete_local_branches(branches);
             let remote_output = delete_remote_branches(branches, git_options);
             ["Remote:".to_owned(), remote_output, "\nLocal:".to_owned(), local_output].join("\n")
-        },
+        }
     }
 }
 
@@ -210,13 +232,14 @@ fn print_and_exit<E: Error>(e: E) {
 
 #[cfg(test)]
 mod test {
-    use options::{DeleteOption};
+    use options::DeleteOption;
     use branches::Branches;
 
     use super::print_warning;
 
     #[test]
     fn test_print_warning() {
-        print_warning(&Branches::new(vec!["branch".to_owned()]), &DeleteOption::Both);
+        print_warning(&Branches::new(vec!["branch".to_owned()]),
+                      &DeleteOption::Both);
     }
 }

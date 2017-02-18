@@ -1,6 +1,6 @@
 use commands::{spawn_piped, output, run_command};
 use error::GitCleanError;
-use getopts::{Matches};
+use getopts::Matches;
 use std::io::{Read, Write};
 
 #[derive(Debug)]
@@ -60,7 +60,7 @@ impl GitOptions {
         let current_branch = output(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
 
         if current_branch != self.base_branch {
-            return Err(GitCleanError::CurrentBranchInvalidError)
+            return Err(GitCleanError::CurrentBranchInvalidError);
         };
 
         Ok(())
@@ -78,7 +78,7 @@ impl GitOptions {
         grep.stdout.unwrap().read_to_string(&mut remote_result).unwrap();
 
         if remote_result.is_empty() {
-            return Err(GitCleanError::InvalidRemoteError)
+            return Err(GitCleanError::InvalidRemoteError);
         }
 
         Ok(())
@@ -95,8 +95,14 @@ mod test {
         let mut opts = Options::new();
         opts.optflag("l", "locals", "only delete local branches");
         opts.optflag("r", "remotes", "only delete remote branches");
-        opts.optopt("R", "", "changes the git remote used (default is origin)", "REMOTE");
-        opts.optopt("b", "", "changes the base for merged branches (default is master)", "BRANCH");
+        opts.optopt("R",
+                    "",
+                    "changes the git remote used (default is origin)",
+                    "REMOTE");
+        opts.optopt("b",
+                    "",
+                    "changes the base for merged branches (default is master)",
+                    "BRANCH");
         opts.optmulti("i", "", "ignored branch", "BRANCH");
         opts.optflag("", "squashes", "");
         opts.optflag("h", "help", "print this help menu");
@@ -134,9 +140,12 @@ mod test {
 
     #[test]
     fn test_delete_option_warning_message() {
-        assert_eq!("The following branches will be deleted locally:", DeleteOption::Local.warning_message());
-        assert_eq!("The following branches will be deleted remotely:", DeleteOption::Remote.warning_message());
-        assert_eq!("The following branches will be deleted locally and remotely:", DeleteOption::Both.warning_message());
+        assert_eq!("The following branches will be deleted locally:",
+                   DeleteOption::Local.warning_message());
+        assert_eq!("The following branches will be deleted remotely:",
+                   DeleteOption::Remote.warning_message());
+        assert_eq!("The following branches will be deleted locally and remotely:",
+                   DeleteOption::Both.warning_message());
     }
 
     // GitOptions tests

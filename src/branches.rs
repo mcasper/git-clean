@@ -3,7 +3,7 @@ pub const COLUMN_SPACER_LENGTH: usize = 30;
 #[derive(Debug)]
 pub struct Branches {
     pub string: String,
-    pub vec: Vec<String>
+    pub vec: Vec<String>,
 }
 
 impl Branches {
@@ -32,19 +32,22 @@ impl Branches {
 
         for i in 1..col_count {
             let index = i - 1;
-            let largest_col_member = chunks.clone().map(|chunk| {
-                if let Some(branch) = chunk.get(index) {
+            let largest_col_member = chunks.clone()
+                .map(|chunk| if let Some(branch) = chunk.get(index) {
                     branch.len()
                 } else {
                     0
-                }
-            }).max().unwrap();
+                })
+                .max()
+                .unwrap();
             let next_col_start = largest_col_member + COLUMN_SPACER_LENGTH;
-            col_indices[i-1] = next_col_start;
+            col_indices[i - 1] = next_col_start;
         }
 
-        let rows: Vec<String> = self.vec.chunks(col_count)
-            .map(|chunk| make_row(chunk, &col_indices)).collect();
+        let rows: Vec<String> = self.vec
+            .chunks(col_count)
+            .map(|chunk| make_row(chunk, &col_indices))
+            .collect();
 
         rows.join("\n").trim().to_owned()
     }
@@ -52,12 +55,22 @@ impl Branches {
 
 fn make_row(chunks: &[String], col_indices: &[usize]) -> String {
     match chunks.len() {
-        1 => { chunks[0].clone() },
-        2 => { format!("{b1:0$}{b2}", col_indices[0], b1 = chunks[0], b2 = chunks[1]) },
+        1 => chunks[0].clone(),
+        2 => {
+            format!("{b1:0$}{b2}",
+                    col_indices[0],
+                    b1 = chunks[0],
+                    b2 = chunks[1])
+        }
         3 => {
-            format!("{b1:0$}{b2:1$}{b3}", col_indices[0], col_indices[1], b1 = chunks[0], b2 = chunks[1], b3 = chunks[2])
-        },
-        _ => unreachable!("This code should never be reached!")
+            format!("{b1:0$}{b2:1$}{b3}",
+                    col_indices[0],
+                    col_indices[1],
+                    b1 = chunks[0],
+                    b2 = chunks[1],
+                    b3 = chunks[2])
+        }
+        _ => unreachable!("This code should never be reached!"),
     }
 }
 
@@ -71,7 +84,8 @@ mod test {
         let branches = Branches::new(input);
 
         assert_eq!("branch1\nbranch2".to_owned(), branches.string);
-        assert_eq!(vec!["branch1".to_owned(), "branch2".to_owned()], branches.vec);
+        assert_eq!(vec!["branch1".to_owned(), "branch2".to_owned()],
+                   branches.vec);
     }
 
     #[test]
@@ -83,8 +97,7 @@ mod test {
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
+        let expected = "\
 branch
 branch
 branch
@@ -95,6 +108,8 @@ branch
 branch
 branch
 branch
+\
+                        branch
 branch
 branch
 branch
@@ -104,8 +119,8 @@ branch
 branch
 branch
 branch
-branch
-branch
+\
+                        branch
 branch
 branch
 branch";
@@ -122,20 +137,25 @@ branch";
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
+        let expected = "\
 branch                              branch
+branch                              \
+                        branch
 branch                              branch
+branch                              \
+                        branch
 branch                              branch
+branch                              \
+                        branch
 branch                              branch
+branch                              \
+                        branch
 branch                              branch
+branch                              \
+                        branch
 branch                              branch
-branch                              branch
-branch                              branch
-branch                              branch
-branch                              branch
-branch                              branch
-branch                              branch
+branch                              \
+                        branch
 branch                              branch";
 
         assert_eq!(expected, branches.format_columns());
@@ -150,25 +170,41 @@ branch                              branch";
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch";
+        let expected = "\
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch";
 
         assert_eq!(expected, branches.format_columns());
     }
@@ -182,35 +218,58 @@ branch                              branch                              branch";
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch                              branch                              branch
-branch\
-";
+        let expected = "\
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch                              branch                              \
+                        branch
+branch";
 
         assert_eq!(expected, branches.format_columns());
     }
@@ -224,20 +283,25 @@ branch\
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
+        let expected = "\
 branch0                               branch1
-branch2                               branch3
+branch2                               \
+                        branch3
 branch4                               branch5
-branch6                               branch7
+branch6                               \
+                        branch7
 branch8                               branch9
-branch10                              branch11
+branch10                              \
+                        branch11
 branch12                              branch13
-branch14                              branch15
+branch14                              \
+                        branch15
 branch16                              branch17
-branch18                              branch19
+branch18                              \
+                        branch19
 branch20                              branch21
-branch22                              branch23
+branch22                              \
+                        branch23
 branch24                              branch25";
         assert_eq!(expected, branches.format_columns());
     }
@@ -252,35 +316,46 @@ branch24                              branch25";
         let branches = Branches::new(input);
 
         let expected =
-"\
+            "\
 really_long_branch_name                              branch-1
-branch0                                              branch1
+branch0                                              \
+             branch1
 branch2                                              branch3
-branch4                                              branch5
+branch4                                              \
+             branch5
 branch6                                              branch7
-branch8                                              branch9
+branch8                                              \
+             branch9
 branch10                                             branch11
-branch12                                             branch13
+branch12                                             \
+             branch13
 branch14                                             branch15
-branch16                                             branch17
+branch16                                             \
+             branch17
 branch18                                             branch19
-branch20                                             branch21
+branch20                                             \
+             branch21
 branch22                                             branch23
-branch24                                             branch25";
+branch24                                             \
+             branch25";
         assert_eq!(expected, branches.format_columns());
     }
 
     #[test]
     fn test_long_branches_with_three_columns() {
-        let mut input = vec!["really_long_branch_name".to_owned(), "branch".to_owned(), "branch".to_owned(), "branch".to_owned(), "really_long_middle_col".to_owned(), "branch".to_owned()];
+        let mut input = vec!["really_long_branch_name".to_owned(),
+                             "branch".to_owned(),
+                             "branch".to_owned(),
+                             "branch".to_owned(),
+                             "really_long_middle_col".to_owned(),
+                             "branch".to_owned()];
         for i in 0..45 {
             input.push(format!("branch{}", i));
         }
 
         let branches = Branches::new(input);
 
-        let expected =
-"\
+        let expected = "\
 really_long_branch_name                              branch                                              branch
 branch                                               really_long_middle_col                              branch
 branch0                                              branch1                                             branch2

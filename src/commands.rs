@@ -13,7 +13,7 @@ pub fn spawn_piped(args: &[&str]) -> Child {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|e| { panic!("Error with child process: {}", e) })
+        .unwrap_or_else(|e| panic!("Error with child process: {}", e))
 }
 
 pub fn run_command_with_no_output(args: &[&str]) {
@@ -32,8 +32,7 @@ pub fn output(args: &[&str]) -> String {
 }
 
 pub fn run_command(args: &[&str]) -> Output {
-    run_command_with_result(args)
-        .unwrap_or_else(|e| { panic!("Error with command: {}", e) })
+    run_command_with_result(args).unwrap_or_else(|e| panic!("Error with command: {}", e))
 }
 
 pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
@@ -78,8 +77,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let all_remote_branches = s.split('\n').collect::<Vec<&str>>();
     let origin_for_trim = &format!("{}/", &git_options.remote)[..];
-    let b_tree_remotes = all_remote_branches
-        .iter()
+    let b_tree_remotes = all_remote_branches.iter()
         .map(|b| b.trim().trim_left_matches(origin_for_trim).to_owned())
         .collect::<BTreeSet<String>>();
 
@@ -111,7 +109,7 @@ pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> 
         } else if s.contains(" - [deleted]") {
             output.push(s.to_owned());
         }
-    };
+    }
 
     output.join("\n")
 }
