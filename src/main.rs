@@ -47,13 +47,13 @@ fn main() {
         Ok(m) => m,
         Err(e) => {
             println!("{}", e);
-            print_help(opts);
+            print_help(&opts);
             return;
         }
     };
 
     if matches.opt_present("h") {
-        print_help(opts);
+        print_help(&opts);
         return;
     }
 
@@ -62,10 +62,10 @@ fn main() {
         return;
     }
 
-    validate_git_installation().unwrap_or_else(print_and_exit);
+    validate_git_installation().unwrap_or_else(|e| print_and_exit(&e));
 
     let git_options = GitOptions::new(&matches);
-    git_options.validate().unwrap_or_else(print_and_exit);
+    git_options.validate().unwrap_or_else(|e| print_and_exit(&e));
 
     let branches = merged_branches(&git_options);
 
@@ -97,7 +97,7 @@ fn print_version() {
     println!("git-clean version {}", VERSION);
 }
 
-fn print_help(opts: Options) {
+fn print_help(opts: &Options) {
     print!("{}", opts.usage("Usage: git-clean [options]"));
 }
 
@@ -225,7 +225,7 @@ fn delete_branches(branches: &Branches,
     }
 }
 
-fn print_and_exit<E: Error>(e: E) {
+fn print_and_exit<E: Error>(e: &E) {
     println!("{}", e);
     std::process::exit(1);
 }
