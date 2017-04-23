@@ -2,6 +2,9 @@ use commands::{spawn_piped, output, run_command};
 use error::GitCleanError;
 use getopts::Matches;
 use std::io::{Read, Write};
+use std::fs::File;
+
+use toml::Value as TomlValue;
 
 #[derive(Debug)]
 pub enum DeleteMode {
@@ -45,6 +48,18 @@ impl Options {
     pub fn new(opts: &Matches) -> Options {
         let default_remote = "origin".to_owned();
         let default_base_branch = "master".to_owned();
+
+        match File::open(".git-clean") {
+            Ok(mut file) => {
+                let mut contents = String::new();
+                file.read_to_string(&mut contents).unwrap();
+                let toml = contents.parse::<TomlValue>();
+
+                println!("{:?}", toml);
+            },
+            _ => (),
+        }
+
         Options {
             remote: opts.opt_str("R").unwrap_or(default_remote),
             base_branch: opts.opt_str("b").unwrap_or(default_base_branch),

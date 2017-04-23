@@ -10,6 +10,7 @@ repository = "https://github.com/mcasper/git-clean"
 
 [dependencies]
 getopts = "0.2"
+toml = "0.4"
 
 [dev-dependencies]
 tempdir = "0.3"

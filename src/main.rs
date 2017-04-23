@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
 extern crate getopts;
+extern crate toml;
 
 use std::{env, io};
 use std::io::{Read, Write};
