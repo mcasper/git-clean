@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use branches::Branches;
 use error::GitCleanError;
-use options::GitOptions;
+use options::Options;
 
 pub fn spawn_piped(args: &[&str]) -> Child {
     Command::new(&args[0])
@@ -69,14 +69,14 @@ pub fn delete_local_branches(branches: &Branches) -> String {
     branches_delete_result
 }
 
-pub fn delete_remote_branches(branches: &Branches, git_options: &GitOptions) -> String {
-    let xargs = spawn_piped(&["xargs", "git", "push", &git_options.remote, "--delete"]);
+pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String {
+    let xargs = spawn_piped(&["xargs", "git", "push", &options.remote, "--delete"]);
 
     let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let all_remote_branches = s.split('\n').collect::<Vec<&str>>();
-    let origin_for_trim = &format!("{}/", &git_options.remote)[..];
+    let origin_for_trim = &format!("{}/", &options.remote)[..];
     let b_tree_remotes = all_remote_branches.iter()
         .map(|b| b.trim().trim_left_matches(origin_for_trim).to_owned())
         .collect::<BTreeSet<String>>();

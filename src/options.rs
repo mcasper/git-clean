@@ -4,16 +4,16 @@ use getopts::Matches;
 use std::io::{Read, Write};
 
 #[derive(Debug)]
-pub enum DeleteOption {
+pub enum DeleteMode {
     Local,
     Remote,
     Both,
 }
 
-pub use self::DeleteOption::*;
+pub use self::DeleteMode::*;
 
-impl DeleteOption {
-    pub fn new(opts: &Matches) -> DeleteOption {
+impl DeleteMode {
+    pub fn new(opts: &Matches) -> DeleteMode {
         if opts.opt_present("l") {
             Local
         } else if opts.opt_present("r") {
@@ -33,22 +33,24 @@ impl DeleteOption {
     }
 }
 
-pub struct GitOptions {
+pub struct Options {
     pub remote: String,
     pub base_branch: String,
     pub squashes: bool,
     pub ignored_branches: Vec<String>,
+    pub delete_mode: DeleteMode,
 }
 
-impl GitOptions {
-    pub fn new(opts: &Matches) -> GitOptions {
+impl Options {
+    pub fn new(opts: &Matches) -> Options {
         let default_remote = "origin".to_owned();
         let default_base_branch = "master".to_owned();
-        GitOptions {
+        Options {
             remote: opts.opt_str("R").unwrap_or(default_remote),
             base_branch: opts.opt_str("b").unwrap_or(default_base_branch),
             ignored_branches: opts.opt_strs("i"),
             squashes: opts.opt_present("squashes"),
+            delete_mode: DeleteMode::new(opts),
         }
     }
 
@@ -89,12 +91,12 @@ impl GitOptions {
 
 #[cfg(test)]
 mod test {
-    use getopts::{Options, Matches};
-    use super::{DeleteOption, GitOptions};
+    use getopts;
+    use super::{DeleteMode, Options};
 
     // Helpers
-    fn parse_args(args: Vec<&str>) -> Matches {
-        let mut opts = Options::new();
+    fn parse_args(args: Vec<&str>) -> getopts::Matches {
+        let mut opts = getopts::Options::new();
         opts.optflag("l", "locals", "only delete local branches");
         opts.optflag("r", "remotes", "only delete remote branches");
         opts.optopt("R",
@@ -115,65 +117,65 @@ mod test {
         }
     }
 
-    // DeleteOption tests
+    // DeleteMode tests
     #[test]
     fn test_delete_option_new() {
         let matches = parse_args(vec!["-l"]);
 
-        match DeleteOption::new(&matches) {
-            DeleteOption::Local => (),
-            other @ _ => panic!("Expected a DeleteOption::Local, but found: {:?}", other),
+        match DeleteMode::new(&matches) {
+            DeleteMode::Local => (),
+            other @ _ => panic!("Expected a DeleteMode::Local, but found: {:?}", other),
         };
 
         let matches = parse_args(vec!["-r"]);
 
-        match DeleteOption::new(&matches) {
-            DeleteOption::Remote => (),
-            other @ _ => panic!("Expected a DeleteOption::Remote, but found: {:?}", other),
+        match DeleteMode::new(&matches) {
+            DeleteMode::Remote => (),
+            other @ _ => panic!("Expected a DeleteMode::Remote, but found: {:?}", other),
         };
 
         let matches = parse_args(vec![]);
 
-        match DeleteOption::new(&matches) {
-            DeleteOption::Both => (),
-            other @ _ => panic!("Expected a DeleteOption::Both, but found: {:?}", other),
+        match DeleteMode::new(&matches) {
+            DeleteMode::Both => (),
+            other @ _ => panic!("Expected a DeleteMode::Both, but found: {:?}", other),
         };
     }
 
     #[test]
     fn test_delete_option_warning_message() {
         assert_eq!("The following branches will be deleted locally:",
-                   DeleteOption::Local.warning_message());
+                   DeleteMode::Local.warning_message());
         assert_eq!("The following branches will be deleted remotely:",
-                   DeleteOption::Remote.warning_message());
+                   DeleteMode::Remote.warning_message());
         assert_eq!("The following branches will be deleted locally and remotely:",
-                   DeleteOption::Both.warning_message());
+                   DeleteMode::Both.warning_message());
     }
 
-    // GitOptions tests
+    // Options tests
     #[test]
     fn test_git_options_new() {
         let matches = parse_args(vec![]);
-        let git_options = GitOptions::new(&matches);
+        let git_options = Options::new(&matches);
 
         assert_eq!("master".to_owned(), git_options.base_branch);
         assert_eq!("origin".to_owned(), git_options.remote);
 
         let matches = parse_args(vec!["-b", "stable"]);
-        let git_options = GitOptions::new(&matches);
+        let git_options = Options::new(&matches);
 
         assert_eq!("stable".to_owned(), git_options.base_branch);
         assert_eq!("origin".to_owned(), git_options.remote);
 
         let matches = parse_args(vec!["-R", "upstream"]);
-        let git_options = GitOptions::new(&matches);
+        let git_options = Options::new(&matches);
 
         assert_eq!("master".to_owned(), git_options.base_branch);
         assert_eq!("upstream".to_owned(), git_options.remote);
         assert!(!git_options.squashes);
 
         let matches = parse_args(vec!["-R", "upstream", "--squashes"]);
-        let git_options = GitOptions::new(&matches);
+        let git_options = Options::new(&matches);
 
         assert!(git_options.squashes);
     }
