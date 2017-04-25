@@ -1,10 +1,11 @@
 #![deny(warnings)]
 
-extern crate getopts;
+extern crate clap;
 
-use std::{env, io};
-use std::io::{Read, Write};
+use std::io::{Read, Write, stdin, stdout};
 use std::error::Error;
+
+mod app;
 
 mod error;
 
@@ -17,48 +18,8 @@ use branches::Branches;
 mod commands;
 use commands::*;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let mut opts = getopts::Options::new();
-    opts.optflag("l", "locals", "only delete local branches");
-    opts.optflag("r", "remotes", "only delete remote branches");
-    opts.optflag("y", "yes", "skip the check for deleting branches");
-    opts.optflag("s",
-                 "squashes",
-                 "check for squashes by finding branches incompatible with master");
-    opts.optopt("R",
-                "remote",
-                "changes the git remote used (default is origin)",
-                "REMOTE");
-    opts.optopt("b",
-                "branch",
-                "changes the base for merged branches (default is master)",
-                "BRANCH");
-    opts.optmulti("i", "ignore", "ignores given branches", "BRANCH");
-    opts.optflag("h", "help", "print this help menu");
-    opts.optflag("v", "version", "print the version");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(e) => {
-            println!("{}", e);
-            print_help(&opts);
-            return;
-        }
-    };
-
-    if matches.opt_present("h") {
-        print_help(&opts);
-        return;
-    }
-
-    if matches.opt_present("version") {
-        print_version();
-        return;
-    }
+    let matches = app::app().get_matches();
 
     validate_git_installation().unwrap_or_else(|e| print_and_exit(&e));
 
@@ -72,12 +33,12 @@ fn main() {
         return;
     }
 
-    if !matches.opt_present("y") {
+    if !matches.is_present("yes") {
         print_warning(&branches, &options.delete_mode);
 
         // Read the user's response on continuing
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+        stdin().read_line(&mut input).unwrap();
 
         match input.to_lowercase().as_ref() {
             "y\n" | "yes\n" | "\n" => (),
@@ -89,19 +50,11 @@ fn main() {
     println!("\n{}", msg);
 }
 
-fn print_version() {
-    println!("git-clean version {}", VERSION);
-}
-
-fn print_help(opts: &getopts::Options) {
-    print!("{}", opts.usage("Usage: git-clean [options]"));
-}
-
 fn print_warning(branches: &Branches, delete_mode: &DeleteMode) {
     println!("{}", delete_mode.warning_message());
     println!("{}", branches.format_columns());
     print!("Continue? (Y/n) ");
-    io::stdout().flush().unwrap();
+    stdout().flush().unwrap();
 }
 
 fn merged_branches(options: &Options) -> Branches {

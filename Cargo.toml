@@ -9,7 +9,6 @@ homepage = "https://github.com/mcasper/git-clean"
 repository = "https://github.com/mcasper/git-clean"
 
 [dependencies]
-getopts = "0.2"
 clap = "2.23"
 
 [dev-dependencies]

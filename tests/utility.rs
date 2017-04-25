@@ -4,7 +4,7 @@ use support::project;
 fn test_git_clean_checks_for_git_in_path() {
     let project = project("git-clean_removes").build();
 
-    let result = project.git_clean_command("git")
+    let result = project.git_clean_command("-y")
         .env("PATH", "")
         .run();
 
