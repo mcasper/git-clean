@@ -13,9 +13,7 @@ pub struct ProjectBuilder {
 
 impl ProjectBuilder {
     fn new(name: &str) -> Self {
-        ProjectBuilder {
-            name: name.into(),
-        }
+        ProjectBuilder { name: name.into() }
     }
 
     pub fn build(self) -> Project {
@@ -28,16 +26,12 @@ impl ProjectBuilder {
             remote: remote_dir,
         };
 
-        project.batch_setup_commands(
-            &[
-                "git init",
-                "git config push.default matching",
-                "git remote add origin remote",
-                "touch test_file.txt",
-                "git add .",
-                "git commit -am Init",
-            ]
-        );
+        project.batch_setup_commands(&["git init",
+                                       "git config push.default matching",
+                                       "git remote add origin remote",
+                                       "touch test_file.txt",
+                                       "git add .",
+                                       "git commit -am Init"]);
 
         project
     }
@@ -52,11 +46,10 @@ pub struct Project {
 impl Project {
     pub fn setup_command(&self, command: &str) -> TestCommandResult {
         let command_pieces = command.split(' ').collect::<Vec<&str>>();
-        let result = TestCommand::new(
-            &self.path(),
-            command_pieces[1..].to_vec(),
-            command_pieces[0]
-            ).run();
+        let result = TestCommand::new(&self.path(),
+                                      command_pieces[1..].to_vec(),
+                                      command_pieces[0])
+            .run();
 
         if !result.is_success() {
             panic!(result.failure_message("setup command to succeed"))
@@ -67,11 +60,10 @@ impl Project {
 
     pub fn remote_setup_command(&self, command: &str) -> TestCommandResult {
         let command_pieces = command.split(' ').collect::<Vec<&str>>();
-        let result = TestCommand::new(
-            &self.remote_path(),
-            command_pieces[1..].to_vec(),
-            command_pieces[0]
-            ).run();
+        let result = TestCommand::new(&self.remote_path(),
+                                      command_pieces[1..].to_vec(),
+                                      command_pieces[0])
+            .run();
 
         if !result.is_success() {
             panic!(result.failure_message("remote setup command to succeed"))
@@ -83,7 +75,7 @@ impl Project {
     pub fn batch_setup_commands(&self, commands: &[&str]) {
         for command in commands.iter() {
             self.setup_command(command);
-        };
+        }
     }
 
     pub fn git_clean_command(&self, command: &str) -> TestCommand {
@@ -139,15 +131,12 @@ impl TestCommand {
         for &(ref k, ref v) in &self.envs {
             command.env(&k, &v);
         }
-        let output = command
-            .args(&self.args)
+        let output = command.args(&self.args)
             .current_dir(&self.path)
             .output()
             .unwrap();
 
-        TestCommandResult {
-            output: output,
-        }
+        TestCommandResult { output: output }
     }
 }
 
@@ -181,7 +170,8 @@ fn path_to_git_clean() -> String {
         .join("target")
         .join("debug")
         .join("git-clean")
-        .to_str().unwrap()
+        .to_str()
+        .unwrap()
         .to_owned();
     println!("Path is: {:?}", path);
     path

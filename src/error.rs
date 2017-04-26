@@ -1,4 +1,5 @@
 use std::fmt::{Display, Error as FmtError, Formatter};
+use std::io::Error as IoError;
 use std::error::Error as StdError;
 
 #[derive(Debug)]
@@ -6,6 +7,8 @@ pub enum Error {
     GitInstallationError,
     CurrentBranchInvalidError,
     InvalidRemoteError,
+    ExitEarly,
+    Io(IoError),
 }
 
 use self::Error::*;
@@ -13,6 +16,8 @@ use self::Error::*;
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
+            Io(ref io_error) => io_error.description(),
+            ExitEarly => "",
             GitInstallationError => {
                 "Unable to execute 'git' on your machine, please make sure it's installed and on \
                  your PATH"
@@ -31,5 +36,11 @@ impl StdError for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.description().fmt(f)
+    }
+}
+
+impl From<IoError> for Error {
+    fn from(error: IoError) -> Error {
+        Io(error)
     }
 }

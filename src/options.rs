@@ -13,7 +13,7 @@ pub enum DeleteMode {
 pub use self::DeleteMode::*;
 
 impl DeleteMode {
-   pub fn new(opts: &ArgMatches) -> DeleteMode {
+    pub fn new(opts: &ArgMatches) -> DeleteMode {
         if opts.is_present("locals") {
             Local
         } else if opts.is_present("remotes") {
@@ -45,7 +45,9 @@ impl Options {
     pub fn new(opts: &ArgMatches) -> Options {
         let default_remote = "origin";
         let default_base_branch = "master";
-        let ignored = opts.values_of("ignore").map(|i| i.map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(vec![]);
+        let ignored = opts.values_of("ignore")
+            .map(|i| i.map(|v| v.to_owned()).collect::<Vec<String>>())
+            .unwrap_or(vec![]);
         Options {
             remote: opts.value_of("remote").unwrap_or(default_remote).into(),
             base_branch: opts.value_of("branch").unwrap_or(default_base_branch).into(),

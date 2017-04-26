@@ -1,3 +1,8 @@
+use commands::*;
+use error::Error;
+use options::*;
+use std::io::{Read, Write, stdout, stdin};
+
 pub const COLUMN_SPACER_LENGTH: usize = 30;
 
 #[derive(Debug)]
@@ -16,7 +21,125 @@ impl Branches {
         }
     }
 
-    pub fn format_columns(&self) -> String {
+    pub fn print_warning_and_prompt(&self, delete_mode: &DeleteMode) -> Result<(), Error> {
+        println!("{}", delete_mode.warning_message());
+        println!("{}", self.format_columns());
+        print!("Continue? (Y/n) ");
+        stdout().flush()?;
+
+        // Read the user's response on continuing
+        let mut input = String::new();
+        stdin().read_line(&mut input)?;
+
+        match input.to_lowercase().as_ref() {
+            "y\n" | "yes\n" | "\n" => Ok(()),
+            _ => return Err(Error::ExitEarly),
+        }
+    }
+
+    pub fn merged(options: &Options) -> Branches {
+        let mut branches: Vec<String> = vec![];
+        println!("Updating remote {}", options.remote);
+        run_command_with_no_output(&["git", "remote", "update", &options.remote, "--prune"]);
+
+        let merged_branches_regex = format!("\\*{branch}|\\s{branch}",
+                                            branch = &options.base_branch);
+        let merged_branches_filter = spawn_piped(&["grep", "-vE", &merged_branches_regex]);
+        let merged_branches_cmd = run_command(&["git", "branch", "--merged"]);
+
+        {
+            merged_branches_filter.stdin.unwrap().write_all(&merged_branches_cmd.stdout).unwrap();
+        }
+
+        let mut merged_branches_output = String::new();
+        merged_branches_filter.stdout.unwrap().read_to_string(&mut merged_branches_output).unwrap();
+        let merged_branches =
+            merged_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+
+        let local_branches_regex = format!("\\*{branch}|\\s{branch}",
+                                           branch = &options.base_branch);
+        let local_branches_filter = spawn_piped(&["grep", "-vE", &local_branches_regex]);
+        let local_branches_cmd = run_command(&["git", "branch"]);
+
+        {
+            local_branches_filter.stdin.unwrap().write_all(&local_branches_cmd.stdout).unwrap();
+        }
+
+        let mut local_branches_output = String::new();
+        local_branches_filter.stdout.unwrap().read_to_string(&mut local_branches_output).unwrap();
+
+        let local_branches = local_branches_output.split('\n')
+            .map(|b| b.trim().into())
+            .filter(|branch| !options.ignored_branches.contains(branch))
+            .collect::<Vec<String>>();
+
+        let remote_branches_regex = format!("(HEAD|{})", &options.base_branch);
+        let remote_branches_filter = spawn_piped(&["grep", "-vE", &remote_branches_regex]);
+        let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
+
+        {
+            remote_branches_filter.stdin.unwrap().write_all(&remote_branches_cmd.stdout).unwrap();
+        }
+
+        let mut remote_branches_output = String::new();
+        remote_branches_filter.stdout.unwrap().read_to_string(&mut remote_branches_output).unwrap();
+        let remote_branches =
+            remote_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+
+        for branch in local_branches {
+            // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
+            // way to determine if we want to suggest to delete it.
+            if !remote_branches.contains(&format!("{}/{}", &options.remote, branch)) {
+                branches.push(branch.to_owned());
+                continue;
+            }
+
+            // If it does exist in the remote, check to see if it's listed in git branches --merged. If
+            // it is, that means it wasn't merged using Github squashes, and we can suggest it.
+            if merged_branches.contains(&branch) {
+                branches.push(branch.to_owned());
+                continue;
+            }
+
+            // If neither of the above matched, merge master into the branch and see if it succeeds.
+            // If it can't cleanly merge, then it has likely been merged with Github squashes, and we
+            // can suggest it.
+            if options.squashes {
+                run_command(&["git", "checkout", &branch]);
+                match run_command_with_status(&["git",
+                                                "pull",
+                                                "--ff-only",
+                                                &options.remote,
+                                                &options.base_branch]) {
+                    Ok(status) => {
+                        if !status.success() {
+                            println!("why");
+                            branches.push(branch.into());
+                        }
+                    }
+                    Err(err) => {
+                        println!("Encountered error trying to update branch {} with branch {}: {}",
+                                 branch,
+                                 options.base_branch,
+                                 err);
+                        continue;
+                    }
+                }
+
+                run_command(&["git", "reset", "--hard"]);
+                run_command(&["git", "checkout", &options.base_branch]);
+            }
+        }
+
+        // if deleted in remote, list
+        //
+        // g branch -d -r <remote>/<branch>
+        // g branch -d <branch>
+
+        Branches::new(branches)
+    }
+
+    fn format_columns(&self) -> String {
         // Covers the single column case
         if self.vec.len() < 26 {
             return self.string.clone();
@@ -50,6 +173,19 @@ impl Branches {
             .collect();
 
         rows.join("\n").trim().to_owned()
+    }
+
+    pub fn delete(&self, options: &Options) -> String {
+        match options.delete_mode {
+            DeleteMode::Local => delete_local_branches(self),
+            DeleteMode::Remote => delete_remote_branches(self, options),
+            DeleteMode::Both => {
+                let local_output = delete_local_branches(self);
+                let remote_output = delete_remote_branches(self, options);
+                ["Remote:".to_owned(), remote_output, "\nLocal:".to_owned(), local_output]
+                    .join("\n")
+            }
+        }
     }
 }
 
@@ -140,22 +276,22 @@ branch";
         let expected = "\
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch
 branch                              \
-                        branch
+branch
 branch                              branch";
 
         assert_eq!(expected, branches.format_columns());
@@ -172,39 +308,39 @@ branch                              branch";
 
         let expected = "\
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch";
+branch";
 
         assert_eq!(expected, branches.format_columns());
     }
@@ -220,55 +356,55 @@ branch                              branch                              \
 
         let expected = "\
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch                              branch                              \
-                        branch
+branch
 branch";
 
         assert_eq!(expected, branches.format_columns());
@@ -286,22 +422,22 @@ branch";
         let expected = "\
 branch0                               branch1
 branch2                               \
-                        branch3
+branch3
 branch4                               branch5
 branch6                               \
-                        branch7
+branch7
 branch8                               branch9
 branch10                              \
-                        branch11
+branch11
 branch12                              branch13
 branch14                              \
-                        branch15
+branch15
 branch16                              branch17
 branch18                              \
-                        branch19
+branch19
 branch20                              branch21
 branch22                              \
-                        branch23
+branch23
 branch24                              branch25";
         assert_eq!(expected, branches.format_columns());
     }
@@ -319,25 +455,25 @@ branch24                              branch25";
             "\
 really_long_branch_name                              branch-1
 branch0                                              \
-             branch1
+branch1
 branch2                                              branch3
 branch4                                              \
-             branch5
+branch5
 branch6                                              branch7
 branch8                                              \
-             branch9
+branch9
 branch10                                             branch11
 branch12                                             \
-             branch13
+branch13
 branch14                                             branch15
 branch16                                             \
-             branch17
+branch17
 branch18                                             branch19
 branch20                                             \
-             branch21
+branch21
 branch22                                             branch23
 branch24                                             \
-             branch25";
+branch25";
         assert_eq!(expected, branches.format_columns());
     }
 
