@@ -18,10 +18,10 @@ use error::Error;
 mod options;
 use options::Options;
 
-pub fn run(matches: ArgMatches) -> Result<(), error::Error> {
+pub fn run(matches: &ArgMatches) -> Result<(), error::Error> {
     validate_git_installation()?;
 
-    let options = Options::new(&matches);
+    let options = Options::new(matches);
     options.validate()?;
 
     let branches = Branches::merged(&options);
@@ -41,7 +41,7 @@ pub fn run(matches: ArgMatches) -> Result<(), error::Error> {
     Ok(())
 }
 
-pub fn print_and_exit(error: Error) {
+pub fn print_and_exit(error: &Error) {
     println!("{}", error);
     std::process::exit(1);
 }

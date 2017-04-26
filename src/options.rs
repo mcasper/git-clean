@@ -3,6 +3,9 @@ use error::Error;
 use clap::ArgMatches;
 use std::io::{Read, Write};
 
+const DEFAULT_REMOTE: &'static str = "origin";
+const DEFAULT_BRANCH: &'static str = "master";
+
 #[derive(Debug)]
 pub enum DeleteMode {
     Local,
@@ -43,14 +46,13 @@ pub struct Options {
 
 impl Options {
     pub fn new(opts: &ArgMatches) -> Options {
-        let default_remote = "origin";
-        let default_base_branch = "master";
+        let default_ignored = Vec::new();
         let ignored = opts.values_of("ignore")
             .map(|i| i.map(|v| v.to_owned()).collect::<Vec<String>>())
-            .unwrap_or(vec![]);
+            .unwrap_or(default_ignored);
         Options {
-            remote: opts.value_of("remote").unwrap_or(default_remote).into(),
-            base_branch: opts.value_of("branch").unwrap_or(default_base_branch).into(),
+            remote: opts.value_of("remote").unwrap_or(DEFAULT_REMOTE).into(),
+            base_branch: opts.value_of("branch").unwrap_or(DEFAULT_BRANCH).into(),
             ignored_branches: ignored,
             squashes: opts.is_present("squashes"),
             delete_mode: DeleteMode::new(opts),
@@ -58,8 +60,8 @@ impl Options {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        try!(self.validate_base_branch());
-        try!(self.validate_remote());
+        self.validate_base_branch()?;
+        self.validate_remote()?;
         Ok(())
     }
 

@@ -33,7 +33,7 @@ impl Branches {
 
         match input.to_lowercase().as_ref() {
             "y\n" | "yes\n" | "\n" => Ok(()),
-            _ => return Err(Error::ExitEarly),
+            _ => Err(Error::ExitEarly),
         }
     }
 
