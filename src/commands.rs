@@ -3,7 +3,7 @@ use std::io::{Read, Write, Error as IOError};
 use std::collections::BTreeSet;
 
 use branches::Branches;
-use error::GitCleanError;
+use error::Error;
 use options::Options;
 
 pub fn spawn_piped(args: &[&str]) -> Child {
@@ -50,10 +50,10 @@ pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
         .status()
 }
 
-pub fn validate_git_installation() -> Result<(), GitCleanError> {
+pub fn validate_git_installation() -> Result<(), Error> {
     match Command::new("git").output() {
         Ok(_) => Ok(()),
-        Err(_) => Err(GitCleanError::GitInstallationError),
+        Err(_) => Err(Error::GitInstallationError),
     }
 }
 

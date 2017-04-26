@@ -1,5 +1,5 @@
 use commands::{spawn_piped, output, run_command};
-use error::GitCleanError;
+use error::Error;
 use clap::ArgMatches;
 use std::io::{Read, Write};
 
@@ -55,23 +55,23 @@ impl Options {
         }
     }
 
-    pub fn validate(&self) -> Result<(), GitCleanError> {
+    pub fn validate(&self) -> Result<(), Error> {
         try!(self.validate_base_branch());
         try!(self.validate_remote());
         Ok(())
     }
 
-    fn validate_base_branch(&self) -> Result<(), GitCleanError> {
+    fn validate_base_branch(&self) -> Result<(), Error> {
         let current_branch = output(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
 
         if current_branch != self.base_branch {
-            return Err(GitCleanError::CurrentBranchInvalidError);
+            return Err(Error::CurrentBranchInvalidError);
         };
 
         Ok(())
     }
 
-    fn validate_remote(&self) -> Result<(), GitCleanError> {
+    fn validate_remote(&self) -> Result<(), Error> {
         let grep = spawn_piped(&["grep", &self.remote]);
         let remotes = run_command(&["git", "remote"]);
 
@@ -83,7 +83,7 @@ impl Options {
         grep.stdout.unwrap().read_to_string(&mut remote_result).unwrap();
 
         if remote_result.is_empty() {
-            return Err(GitCleanError::InvalidRemoteError);
+            return Err(Error::InvalidRemoteError);
         }
 
         Ok(())
@@ -93,12 +93,12 @@ impl Options {
 #[cfg(test)]
 mod test {
     use clap;
-    use app;
+    use cli;
     use super::{DeleteMode, Options};
 
     // Helpers
     fn parse_args(args: Vec<&str>) -> clap::ArgMatches {
-        app::app().get_matches_from(args)
+        cli::build_cli().get_matches_from(args)
     }
 
     // DeleteMode tests

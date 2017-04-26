@@ -2,7 +2,7 @@ use clap::{Arg, App};
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-pub fn app() -> App<'static, 'static> {
+pub fn build_cli() -> App<'static, 'static> {
     App::new("git-clean")
             .version(VERSION)
             .author("Matt Casper <matthewvcasper@gmail.com>")

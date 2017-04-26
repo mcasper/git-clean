@@ -1,16 +1,16 @@
-use std::{error, fmt};
-use std::error::Error;
+use std::fmt::{Display, Error as FmtError, Formatter};
+use std::error::Error as StdError;
 
 #[derive(Debug)]
-pub enum GitCleanError {
+pub enum Error {
     GitInstallationError,
     CurrentBranchInvalidError,
     InvalidRemoteError,
 }
 
-use self::GitCleanError::*;
+use self::Error::*;
 
-impl error::Error for GitCleanError {
+impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
             GitInstallationError => {
@@ -28,8 +28,8 @@ impl error::Error for GitCleanError {
     }
 }
 
-impl fmt::Display for GitCleanError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.description().fmt(f)
     }
 }
