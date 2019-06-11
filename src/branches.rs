@@ -13,7 +13,7 @@ pub struct Branches {
 
 impl Branches {
     pub fn new(branches: Vec<String>) -> Branches {
-        let trimmed_string = branches.join("\n").trim_right_matches('\n').into();
+        let trimmed_string = branches.join("\n").trim_end_matches('\n').into();
 
         Branches {
             string: trimmed_string,

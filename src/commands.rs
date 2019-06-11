@@ -78,7 +78,7 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
     let all_remote_branches = s.split('\n').collect::<Vec<&str>>();
     let origin_for_trim = &format!("{}/", &options.remote)[..];
     let b_tree_remotes = all_remote_branches.iter()
-        .map(|b| b.trim().trim_left_matches(origin_for_trim).to_owned())
+        .map(|b| b.trim().trim_start_matches(origin_for_trim).to_owned())
         .collect::<BTreeSet<String>>();
 
     let mut b_tree_branches = BTreeSet::new();
@@ -102,8 +102,8 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
     let mut output = vec![];
     for s in vec {
         if s.contains("error: unable to delete '") {
-            let branch = s.trim_left_matches("error: unable to delete '")
-                .trim_right_matches("': remote ref does not exist");
+            let branch = s.trim_start_matches("error: unable to delete '")
+                .trim_end_matches("': remote ref does not exist");
 
             output.push(branch.to_owned() + " was already deleted in the remote.");
         } else if s.contains(" - [deleted]") {
