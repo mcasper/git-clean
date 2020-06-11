@@ -14,28 +14,29 @@ pub enum Error {
 use self::Error::*;
 
 impl StdError for Error {
-    fn description(&self) -> &str {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match *self {
-            Io(ref io_error) => io_error.description(),
-            ExitEarly => "",
-            GitInstallationError => {
-                "Unable to execute 'git' on your machine, please make sure it's installed and on \
-                 your PATH"
-            }
-            CurrentBranchInvalidError => {
-                "Please make sure to run git-clean from your base branch (defaults to master)."
-            }
-            InvalidRemoteError => {
-                "That remote doesn't exist, please make sure to use a valid remote (defaults to \
-                 origin)."
-            }
+            Io(ref io_error) => Some(io_error),
+            _ => None,
         }
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.description().fmt(f)
+        match *self {
+            Io(ref io_error) => io_error.fmt(f),
+            ExitEarly => Ok(()),
+            GitInstallationError => {
+                write!(f, "Unable to execute 'git' on your machine, please make sure it's installed and on your PATH")
+            }
+            CurrentBranchInvalidError => {
+                write!(f, "Please make sure to run git-clean from your base branch (defaults to master).")
+            }
+            InvalidRemoteError => {
+                write!(f, "That remote doesn't exist, please make sure to use a valid remote (defaults to origin).")
+            }
+        }
     }
 }
 

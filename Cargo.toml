@@ -7,9 +7,10 @@ description = "A tool for cleaning old git branches."
 documentation = "https://github.com/mcasper/git-clean"
 homepage = "https://github.com/mcasper/git-clean"
 repository = "https://github.com/mcasper/git-clean"
+autotests = false
 
 [dependencies]
-clap = "2.23"
+clap = "2.33.1"
 
 [dev-dependencies]
 tempdir = "0.3"
