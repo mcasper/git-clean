@@ -9,7 +9,7 @@ fn test_git_clean_removes_remote_branches() {
         "git push origin HEAD",
         "git checkout -b test2",
         "git push origin HEAD",
-        "git checkout master",
+        "git checkout main",
     ]);
 
     let verify = project.setup_command("git branch -r");
@@ -57,7 +57,7 @@ fn test_git_clean_does_not_remove_ignored_remote_branches() {
         "git push origin HEAD",
         "git checkout -b test2",
         "git push origin HEAD",
-        "git checkout master",
+        "git checkout main",
     ]);
 
     let verify = project.setup_command("git branch -r");

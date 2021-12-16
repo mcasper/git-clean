@@ -124,7 +124,7 @@ impl Branches {
                 continue;
             }
 
-            // If neither of the above matched, merge master into the branch and see if it succeeds.
+            // If neither of the above matched, merge main into the branch and see if it succeeds.
             // If it can't cleanly merge, then it has likely been merged with Github squashes, and we
             // can suggest it.
             if options.squashes {

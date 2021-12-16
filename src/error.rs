@@ -33,7 +33,7 @@ impl Display for Error {
             CurrentBranchInvalid => {
                 write!(
                     f,
-                    "Please make sure to run git-clean from your base branch (defaults to master)."
+                    "Please make sure to run git-clean from your base branch (defaults to main)."
                 )
             }
             InvalidRemote => {

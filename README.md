@@ -61,7 +61,7 @@ is already deleted.
 
 There's no possibility of deleting branches with valuable work on them, as it
 only deletes branches that are even with the base branch you specify (defaults
-to master).
+to main).
 
 - Handles branches squashed by Github
 
@@ -110,10 +110,10 @@ Options:
     -l, --locals        only delete local branches
     -r, --remotes       only delete remote branches
     -y, --yes           skip the check for deleting branches
-    -s, --squashes      check for squashes by finding branches incompatible with master
+    -s, --squashes      check for squashes by finding branches incompatible with main
     -R, --remote REMOTE changes the git remote used (default is origin)
     -b, --branch BRANCH changes the base for merged branches (default is
-                        master)
+                        main)
     -h, --help          print this help menu
     -v, --version       print the version
 ```

@@ -9,7 +9,7 @@ fn test_git_clean_works_with_merged_branches() {
         "touch file2.txt",
         "git add .",
         "git commit -am Merged",
-        "git checkout master",
+        "git checkout main",
         "git merge merged",
     ]);
 
@@ -36,7 +36,7 @@ fn test_git_clean_works_with_squashed_merges() {
         "touch file2.txt",
         "git add .",
         "git commit -am Squash",
-        "git checkout master",
+        "git checkout main",
         "git merge --ff-only squashed",
     ]);
 
@@ -55,7 +55,7 @@ fn test_git_clean_works_with_squashed_merges() {
 }
 
 #[test]
-fn test_git_clean_does_not_delete_branches_ahead_of_master() {
+fn test_git_clean_does_not_delete_branches_ahead_of_main() {
     let project = project("git-clean_branch_ahead").build().setup_remote();
 
     project.batch_setup_commands(&[
@@ -64,7 +64,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
         "git add .",
         "git commit -am Ahead",
         "git push origin HEAD",
-        "git checkout master",
+        "git checkout main",
     ]);
 
     let result = project.git_clean_command("-y").run();
@@ -87,7 +87,7 @@ fn test_git_clean_works_with_squashes_with_flag() {
 
     // Github squashes function basically like a normal squashed merge, it creates an entirely new
     // commit in which all your changes live. The biggest challenge of this is that your local
-    // branch doesn't have any knowledge of this new commit. So if master gets ahead of your local
+    // branch doesn't have any knowledge of this new commit. So if main gets ahead of your local
     // branch, git no longer is able to tell that branch has been merged. These commands simulate
     // this condition.
     project.batch_setup_commands(&[
@@ -96,7 +96,7 @@ fn test_git_clean_works_with_squashes_with_flag() {
         "git add .",
         "git commit -am Commit",
         "git push origin HEAD",
-        "git checkout master",
+        "git checkout main",
         "touch squash.txt",
         "git add .",
         "git commit -am Squash",
@@ -135,7 +135,7 @@ fn test_git_clean_ignores_squashes_without_flag() {
 
     // Github squashes function basically like a normal squashed merge, it creates an entirely new
     // commit in which all your changes live. The biggest challenge of this is that your local
-    // branch doesn't have any knowledge of this new commit. So if master gets ahead of your local
+    // branch doesn't have any knowledge of this new commit. So if main gets ahead of your local
     // branch, git no longer is able to tell that branch has been merged. These commands simulate
     // this condition.
     project.batch_setup_commands(&[
@@ -144,7 +144,7 @@ fn test_git_clean_ignores_squashes_without_flag() {
         "git add .",
         "git commit -am Commit",
         "git push origin HEAD",
-        "git checkout master",
+        "git checkout main",
         "touch squash.txt",
         "git add .",
         "git commit -am Squash",

@@ -4,7 +4,7 @@ use error::Error;
 use std::io::{Read, Write};
 
 const DEFAULT_REMOTE: &str = "origin";
-const DEFAULT_BRANCH: &str = "master";
+const DEFAULT_BRANCH: &str = "main";
 
 #[derive(Debug)]
 pub enum DeleteMode {
@@ -156,7 +156,7 @@ mod test {
         let matches = parse_args(vec!["git-clean"]);
         let git_options = Options::new(&matches);
 
-        assert_eq!("master".to_owned(), git_options.base_branch);
+        assert_eq!("main".to_owned(), git_options.base_branch);
         assert_eq!("origin".to_owned(), git_options.remote);
 
         let matches = parse_args(vec!["git-clean", "-b", "stable"]);
@@ -168,7 +168,7 @@ mod test {
         let matches = parse_args(vec!["git-clean", "-R", "upstream"]);
         let git_options = Options::new(&matches);
 
-        assert_eq!("master".to_owned(), git_options.base_branch);
+        assert_eq!("main".to_owned(), git_options.base_branch);
         assert_eq!("upstream".to_owned(), git_options.remote);
         assert!(!git_options.squashes);
 

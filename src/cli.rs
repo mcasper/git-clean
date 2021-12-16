@@ -32,7 +32,7 @@ pub fn build_cli() -> App<'static, 'static> {
             Arg::with_name("squashes")
                 .short("s")
                 .long("squashes")
-                .help("check for squashes by finding branches incompatible with master")
+                .help("check for squashes by finding branches incompatible with main")
                 .takes_value(false),
         )
         .arg(
@@ -46,7 +46,7 @@ pub fn build_cli() -> App<'static, 'static> {
             Arg::with_name("branch")
                 .short("b")
                 .long("branch")
-                .help("changes the base for merged branches (default is master)")
+                .help("changes the base for merged branches (default is main)")
                 .takes_value(true),
         )
         .arg(
