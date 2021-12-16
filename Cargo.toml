@@ -1,6 +1,6 @@
 [package]
 name = "git-clean"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Matt Casper <matthewvcasper@gmail.com>"]
 license = "MIT"
 description = "A tool for cleaning old git branches."
