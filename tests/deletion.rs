@@ -14,9 +14,9 @@ fn test_git_clean_works_with_merged_branches() {
     let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(),
-            result.failure_message("command to succeed"));
+            "{}", result.failure_message("command to succeed"));
     assert!(result.stdout().contains("Deleted branch merged"),
-            result.failure_message("command to delete merged"));
+            "{}", result.failure_message("command to delete merged"));
 }
 
 #[test]
@@ -33,9 +33,9 @@ fn test_git_clean_works_with_squashed_merges() {
     let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(),
-            result.failure_message("command to succeed"));
+            "{}", result.failure_message("command to succeed"));
     assert!(result.stdout().contains("Deleted branch squashed"),
-            result.failure_message("command to delete squashed"));
+            "{}", result.failure_message("command to delete squashed"));
 }
 
 #[test]
@@ -52,9 +52,9 @@ fn test_git_clean_does_not_delete_branches_ahead_of_master() {
     let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(),
-            result.failure_message("command to succeed"));
+            "{}", result.failure_message("command to succeed"));
     assert!(!result.stdout().contains("Deleted branch ahead"),
-            result.failure_message("command not to delete ahead"));
+            "{}", result.failure_message("command not to delete ahead"));
 }
 
 #[test]
@@ -83,11 +83,11 @@ fn test_git_clean_works_with_squashes_with_flag() {
     let result = project.git_clean_command("-y --squashes").run();
 
     assert!(result.is_success(),
-            result.failure_message("command to succeed"));
+            "{}", result.failure_message("command to succeed"));
     assert!(result.stdout().contains(" - [deleted]         github_squash"),
-            result.failure_message("command to delete github_squash in remote"));
+            "{}", result.failure_message("command to delete github_squash in remote"));
     assert!(result.stdout().contains("Deleted branch github_squash"),
-            result.failure_message("command to delete github_squash locally"));
+            "{}", result.failure_message("command to delete github_squash locally"));
 }
 
 #[test]
@@ -116,9 +116,9 @@ fn test_git_clean_ignores_squashes_without_flag() {
     let result = project.git_clean_command("-y").run();
 
     assert!(result.is_success(),
-            result.failure_message("command to succeed"));
+            "{}", result.failure_message("command to succeed"));
     assert!(!result.stdout().contains(" - [deleted]         github_squash"),
-            result.failure_message("command not to delete github_squash in remote"));
+            "{}", result.failure_message("command not to delete github_squash in remote"));
     assert!(!result.stdout().contains("Deleted branch github_squash"),
-            result.failure_message("command not to delete github_squash locally"));
+            "{}", result.failure_message("command not to delete github_squash locally"));
 }

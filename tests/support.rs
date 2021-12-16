@@ -27,6 +27,7 @@ impl ProjectBuilder {
         };
 
         project.batch_setup_commands(&["git init",
+                                       "git checkout -b master",
                                        "git config push.default matching",
                                        "git remote add origin remote",
                                        "touch test_file.txt",
@@ -52,7 +53,7 @@ impl Project {
             .run();
 
         if !result.is_success() {
-            panic!(result.failure_message("setup command to succeed"))
+            panic!("{}", result.failure_message("setup command to succeed"))
         }
 
         result
@@ -66,7 +67,7 @@ impl Project {
             .run();
 
         if !result.is_success() {
-            panic!(result.failure_message("remote setup command to succeed"))
+            panic!("{}", result.failure_message("remote setup command to succeed"))
         }
 
         result
