@@ -1,7 +1,7 @@
 use commands::*;
 use error::Error;
 use options::*;
-use std::io::{Read, Write, stdout, stdin};
+use std::io::{stdin, stdout, Read, Write};
 
 pub const COLUMN_SPACER_LENGTH: usize = 30;
 
@@ -42,33 +42,49 @@ impl Branches {
         println!("Updating remote {}", options.remote);
         run_command_with_no_output(&["git", "remote", "update", &options.remote, "--prune"]);
 
-        let merged_branches_regex = format!("\\*{branch}|\\s{branch}",
-                                            branch = &options.base_branch);
+        let merged_branches_regex =
+            format!("\\*{branch}|\\s{branch}", branch = &options.base_branch);
         let merged_branches_filter = spawn_piped(&["grep", "-vE", &merged_branches_regex]);
         let merged_branches_cmd = run_command(&["git", "branch", "--merged"]);
 
         {
-            merged_branches_filter.stdin.unwrap().write_all(&merged_branches_cmd.stdout).unwrap();
+            merged_branches_filter
+                .stdin
+                .unwrap()
+                .write_all(&merged_branches_cmd.stdout)
+                .unwrap();
         }
 
         let mut merged_branches_output = String::new();
-        merged_branches_filter.stdout.unwrap().read_to_string(&mut merged_branches_output).unwrap();
-        let merged_branches =
-            merged_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+        merged_branches_filter
+            .stdout
+            .unwrap()
+            .read_to_string(&mut merged_branches_output)
+            .unwrap();
+        let mut merged_branches = merged_branches_output.split('\n').map(|b| b.trim().into());
 
-        let local_branches_regex = format!("\\*{branch}|\\s{branch}",
-                                           branch = &options.base_branch);
+        let local_branches_regex =
+            format!("\\*{branch}|\\s{branch}", branch = &options.base_branch);
         let local_branches_filter = spawn_piped(&["grep", "-vE", &local_branches_regex]);
         let local_branches_cmd = run_command(&["git", "branch"]);
 
         {
-            local_branches_filter.stdin.unwrap().write_all(&local_branches_cmd.stdout).unwrap();
+            local_branches_filter
+                .stdin
+                .unwrap()
+                .write_all(&local_branches_cmd.stdout)
+                .unwrap();
         }
 
         let mut local_branches_output = String::new();
-        local_branches_filter.stdout.unwrap().read_to_string(&mut local_branches_output).unwrap();
+        local_branches_filter
+            .stdout
+            .unwrap()
+            .read_to_string(&mut local_branches_output)
+            .unwrap();
 
-        let local_branches = local_branches_output.split('\n')
+        let local_branches = local_branches_output
+            .split('\n')
             .map(|b| b.trim().into())
             .filter(|branch| !options.ignored_branches.contains(branch))
             .collect::<Vec<String>>();
@@ -78,25 +94,32 @@ impl Branches {
         let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
         {
-            remote_branches_filter.stdin.unwrap().write_all(&remote_branches_cmd.stdout).unwrap();
+            remote_branches_filter
+                .stdin
+                .unwrap()
+                .write_all(&remote_branches_cmd.stdout)
+                .unwrap();
         }
 
         let mut remote_branches_output = String::new();
-        remote_branches_filter.stdout.unwrap().read_to_string(&mut remote_branches_output).unwrap();
-        let remote_branches =
-            remote_branches_output.split('\n').map(|b| b.trim().into()).collect::<Vec<String>>();
+        remote_branches_filter
+            .stdout
+            .unwrap()
+            .read_to_string(&mut remote_branches_output)
+            .unwrap();
+        let mut remote_branches = remote_branches_output.split('\n').map(|b| b.trim().into());
 
         for branch in local_branches {
             // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
             // way to determine if we want to suggest to delete it.
-            if !remote_branches.contains(&format!("{}/{}", &options.remote, branch)) {
+            if !remote_branches.any(|b: String| b == format!("{}/{}", &options.remote, branch)) {
                 branches.push(branch.to_owned());
                 continue;
             }
 
             // If it does exist in the remote, check to see if it's listed in git branches --merged. If
             // it is, that means it wasn't merged using Github squashes, and we can suggest it.
-            if merged_branches.contains(&branch) {
+            if merged_branches.any(|b: String| b == branch) {
                 branches.push(branch.to_owned());
                 continue;
             }
@@ -106,22 +129,24 @@ impl Branches {
             // can suggest it.
             if options.squashes {
                 run_command(&["git", "checkout", &branch]);
-                match run_command_with_status(&["git",
-                                                "pull",
-                                                "--ff-only",
-                                                &options.remote,
-                                                &options.base_branch]) {
+                match run_command_with_status(&[
+                    "git",
+                    "pull",
+                    "--ff-only",
+                    &options.remote,
+                    &options.base_branch,
+                ]) {
                     Ok(status) => {
                         if !status.success() {
                             println!("why");
-                            branches.push(branch.into());
+                            branches.push(branch);
                         }
                     }
                     Err(err) => {
-                        println!("Encountered error trying to update branch {} with branch {}: {}",
-                                 branch,
-                                 options.base_branch,
-                                 err);
+                        println!(
+                            "Encountered error trying to update branch {} with branch {}: {}",
+                            branch, options.base_branch, err
+                        );
                         continue;
                     }
                 }
@@ -155,11 +180,14 @@ impl Branches {
 
         for i in 1..col_count {
             let index = i - 1;
-            let largest_col_member = chunks.clone()
-                .map(|chunk| if let Some(branch) = chunk.get(index) {
-                    branch.len()
-                } else {
-                    0
+            let largest_col_member = chunks
+                .clone()
+                .map(|chunk| {
+                    if let Some(branch) = chunk.get(index) {
+                        branch.len()
+                    } else {
+                        0
+                    }
                 })
                 .max()
                 .unwrap();
@@ -167,7 +195,8 @@ impl Branches {
             col_indices[i - 1] = next_col_start;
         }
 
-        let rows: Vec<String> = self.vec
+        let rows: Vec<String> = self
+            .vec
             .chunks(col_count)
             .map(|chunk| make_row(chunk, &col_indices))
             .collect();
@@ -182,8 +211,13 @@ impl Branches {
             DeleteMode::Both => {
                 let local_output = delete_local_branches(self);
                 let remote_output = delete_remote_branches(self, options);
-                ["Remote:".to_owned(), remote_output, "\nLocal:".to_owned(), local_output]
-                    .join("\n")
+                [
+                    "Remote:".to_owned(),
+                    remote_output,
+                    "\nLocal:".to_owned(),
+                    local_output,
+                ]
+                .join("\n")
             }
         }
     }
@@ -193,18 +227,22 @@ fn make_row(chunks: &[String], col_indices: &[usize]) -> String {
     match chunks.len() {
         1 => chunks[0].clone(),
         2 => {
-            format!("{b1:0$}{b2}",
-                    col_indices[0],
-                    b1 = chunks[0],
-                    b2 = chunks[1])
+            format!(
+                "{b1:0$}{b2}",
+                col_indices[0],
+                b1 = chunks[0],
+                b2 = chunks[1]
+            )
         }
         3 => {
-            format!("{b1:0$}{b2:1$}{b3}",
-                    col_indices[0],
-                    col_indices[1],
-                    b1 = chunks[0],
-                    b2 = chunks[1],
-                    b3 = chunks[2])
+            format!(
+                "{b1:0$}{b2:1$}{b3}",
+                col_indices[0],
+                col_indices[1],
+                b1 = chunks[0],
+                b2 = chunks[1],
+                b3 = chunks[2]
+            )
         }
         _ => unreachable!("This code should never be reached!"),
     }
@@ -220,8 +258,10 @@ mod test {
         let branches = Branches::new(input);
 
         assert_eq!("branch1\nbranch2".to_owned(), branches.string);
-        assert_eq!(vec!["branch1".to_owned(), "branch2".to_owned()],
-                   branches.vec);
+        assert_eq!(
+            vec!["branch1".to_owned(), "branch2".to_owned()],
+            branches.vec
+        );
     }
 
     #[test]
@@ -451,8 +491,7 @@ branch24                              branch25";
 
         let branches = Branches::new(input);
 
-        let expected =
-            "\
+        let expected = "\
 really_long_branch_name                              branch-1
 branch0                                              \
 branch1
@@ -479,12 +518,14 @@ branch25";
 
     #[test]
     fn test_long_branches_with_three_columns() {
-        let mut input = vec!["really_long_branch_name".to_owned(),
-                             "branch".to_owned(),
-                             "branch".to_owned(),
-                             "branch".to_owned(),
-                             "really_long_middle_col".to_owned(),
-                             "branch".to_owned()];
+        let mut input = vec![
+            "really_long_branch_name".to_owned(),
+            "branch".to_owned(),
+            "branch".to_owned(),
+            "branch".to_owned(),
+            "really_long_middle_col".to_owned(),
+            "branch".to_owned(),
+        ];
         for i in 0..45 {
             input.push(format!("branch{}", i));
         }

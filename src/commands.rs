@@ -1,6 +1,6 @@
-use std::process::{Command, Child, ExitStatus, Output, Stdio};
-use std::io::{Read, Write, Error as IOError};
 use std::collections::BTreeSet;
+use std::io::{Error as IOError, Read, Write};
+use std::process::{Child, Command, ExitStatus, Output, Stdio};
 
 use branches::Branches;
 use error::Error;
@@ -36,9 +36,7 @@ pub fn run_command(args: &[&str]) -> Output {
 }
 
 pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
-    Command::new(&args[0])
-        .args(&args[1..])
-        .output()
+    Command::new(&args[0]).args(&args[1..]).output()
 }
 
 pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
@@ -53,7 +51,7 @@ pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
 pub fn validate_git_installation() -> Result<(), Error> {
     match Command::new("git").output() {
         Ok(_) => Ok(()),
-        Err(_) => Err(Error::GitInstallationError),
+        Err(_) => Err(Error::GitInstallation),
     }
 }
 
@@ -61,11 +59,19 @@ pub fn delete_local_branches(branches: &Branches) -> String {
     let xargs = spawn_piped(&["xargs", "git", "branch", "-D"]);
 
     {
-        xargs.stdin.unwrap().write_all(branches.string.as_bytes()).unwrap()
+        xargs
+            .stdin
+            .unwrap()
+            .write_all(branches.string.as_bytes())
+            .unwrap()
     }
 
     let mut branches_delete_result = String::new();
-    xargs.stdout.unwrap().read_to_string(&mut branches_delete_result).unwrap();
+    xargs
+        .stdout
+        .unwrap()
+        .read_to_string(&mut branches_delete_result)
+        .unwrap();
     branches_delete_result
 }
 
@@ -77,7 +83,8 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
     let all_remote_branches = s.split('\n').collect::<Vec<&str>>();
     let origin_for_trim = &format!("{}/", &options.remote)[..];
-    let b_tree_remotes = all_remote_branches.iter()
+    let b_tree_remotes = all_remote_branches
+        .iter()
         .map(|b| b.trim().trim_start_matches(origin_for_trim).to_owned())
         .collect::<BTreeSet<String>>();
 
@@ -87,10 +94,17 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
         b_tree_branches.insert(branch);
     }
 
-    let intersection: Vec<_> = b_tree_remotes.intersection(&b_tree_branches).cloned().collect();
+    let intersection: Vec<_> = b_tree_remotes
+        .intersection(&b_tree_branches)
+        .cloned()
+        .collect();
 
     {
-        xargs.stdin.unwrap().write_all(intersection.join("\n").as_bytes()).unwrap()
+        xargs
+            .stdin
+            .unwrap()
+            .write_all(intersection.join("\n").as_bytes())
+            .unwrap()
     }
 
     let mut stderr = String::new();
@@ -102,7 +116,8 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
     let mut output = vec![];
     for s in vec {
         if s.contains("error: unable to delete '") {
-            let branch = s.trim_start_matches("error: unable to delete '")
+            let branch = s
+                .trim_start_matches("error: unable to delete '")
                 .trim_end_matches("': remote ref does not exist");
 
             output.push(branch.to_owned() + " was already deleted in the remote.");
@@ -125,7 +140,10 @@ mod test {
         let echo = spawn_piped(&["grep", "foo"]);
 
         {
-            echo.stdin.unwrap().write_all("foo\nbar\nbaz".as_bytes()).unwrap()
+            echo.stdin
+                .unwrap()
+                .write_all("foo\nbar\nbaz".as_bytes())
+                .unwrap()
         }
 
         let mut stdout = String::new();

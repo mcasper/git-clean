@@ -1,12 +1,12 @@
+use std::error::Error as StdError;
 use std::fmt::{Display, Error as FmtError, Formatter};
 use std::io::Error as IoError;
-use std::error::Error as StdError;
 
 #[derive(Debug)]
 pub enum Error {
-    GitInstallationError,
-    CurrentBranchInvalidError,
-    InvalidRemoteError,
+    GitInstallation,
+    CurrentBranchInvalid,
+    InvalidRemote,
     ExitEarly,
     Io(IoError),
 }
@@ -27,13 +27,16 @@ impl Display for Error {
         match *self {
             Io(ref io_error) => io_error.fmt(f),
             ExitEarly => Ok(()),
-            GitInstallationError => {
+            GitInstallation => {
                 write!(f, "Unable to execute 'git' on your machine, please make sure it's installed and on your PATH")
             }
-            CurrentBranchInvalidError => {
-                write!(f, "Please make sure to run git-clean from your base branch (defaults to master).")
+            CurrentBranchInvalid => {
+                write!(
+                    f,
+                    "Please make sure to run git-clean from your base branch (defaults to master)."
+                )
             }
-            InvalidRemoteError => {
+            InvalidRemote => {
                 write!(f, "That remote doesn't exist, please make sure to use a valid remote (defaults to origin).")
             }
         }

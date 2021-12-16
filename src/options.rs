@@ -1,10 +1,10 @@
-use commands::{spawn_piped, output, run_command};
-use error::Error;
 use clap::ArgMatches;
+use commands::{output, run_command, spawn_piped};
+use error::Error;
 use std::io::{Read, Write};
 
-const DEFAULT_REMOTE: &'static str = "origin";
-const DEFAULT_BRANCH: &'static str = "master";
+const DEFAULT_REMOTE: &str = "origin";
+const DEFAULT_BRANCH: &str = "master";
 
 #[derive(Debug)]
 pub enum DeleteMode {
@@ -47,7 +47,8 @@ pub struct Options {
 impl Options {
     pub fn new(opts: &ArgMatches) -> Options {
         let default_ignored = Vec::new();
-        let ignored = opts.values_of("ignore")
+        let ignored = opts
+            .values_of("ignore")
             .map(|i| i.map(|v| v.to_owned()).collect::<Vec<String>>())
             .unwrap_or(default_ignored);
         Options {
@@ -69,7 +70,7 @@ impl Options {
         let current_branch = output(&["git", "rev-parse", "--abbrev-ref", "HEAD"]);
 
         if current_branch != self.base_branch {
-            return Err(Error::CurrentBranchInvalidError);
+            return Err(Error::CurrentBranchInvalid);
         };
 
         Ok(())
@@ -84,10 +85,13 @@ impl Options {
         }
 
         let mut remote_result = String::new();
-        grep.stdout.unwrap().read_to_string(&mut remote_result).unwrap();
+        grep.stdout
+            .unwrap()
+            .read_to_string(&mut remote_result)
+            .unwrap();
 
         if remote_result.is_empty() {
-            return Err(Error::InvalidRemoteError);
+            return Err(Error::InvalidRemote);
         }
 
         Ok(())
@@ -96,9 +100,9 @@ impl Options {
 
 #[cfg(test)]
 mod test {
+    use super::{DeleteMode, Options};
     use clap;
     use cli;
-    use super::{DeleteMode, Options};
 
     // Helpers
     fn parse_args(args: Vec<&str>) -> clap::ArgMatches {
@@ -132,12 +136,18 @@ mod test {
 
     #[test]
     fn test_delete_mode_warning_message() {
-        assert_eq!("The following branches will be deleted locally:",
-                   DeleteMode::Local.warning_message());
-        assert_eq!("The following branches will be deleted remotely:",
-                   DeleteMode::Remote.warning_message());
-        assert_eq!("The following branches will be deleted locally and remotely:",
-                   DeleteMode::Both.warning_message());
+        assert_eq!(
+            "The following branches will be deleted locally:",
+            DeleteMode::Local.warning_message()
+        );
+        assert_eq!(
+            "The following branches will be deleted remotely:",
+            DeleteMode::Remote.warning_message()
+        );
+        assert_eq!(
+            "The following branches will be deleted locally and remotely:",
+            DeleteMode::Both.warning_message()
+        );
     }
 
     // Options tests
