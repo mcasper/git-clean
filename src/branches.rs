@@ -33,7 +33,7 @@ impl Branches {
         stdin().read_line(&mut input)?;
 
         match input.to_lowercase().as_ref() {
-            "y\n" | "yes\n" | "\n" => Ok(()),
+            "y\n" | "y\r\n" | "yes\n" | "yes\r\n" | "\n" | "\r\n" => Ok(()),
             _ => Err(Error::ExitEarly),
         }
     }
