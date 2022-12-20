@@ -1,20 +1,10 @@
 use std::collections::BTreeSet;
-use std::io::{Error as IOError, Read, Write};
-use std::process::{Child, Command, ExitStatus, Output, Stdio};
+use std::io::Error as IOError;
+use std::process::{Command, ExitStatus, Output, Stdio};
 
 use branches::Branches;
 use error::Error;
 use options::Options;
-
-pub fn spawn_piped(args: &[&str]) -> Child {
-    Command::new(&args[0])
-        .args(&args[1..])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap_or_else(|e| panic!("Error with child process: {}", e))
-}
 
 pub fn run_command_with_no_output(args: &[&str]) {
     Command::new(&args[0])
@@ -56,27 +46,25 @@ pub fn validate_git_installation() -> Result<(), Error> {
 }
 
 pub fn delete_local_branches(branches: &Branches) -> String {
-    let xargs = spawn_piped(&["xargs", "git", "branch", "-D"]);
-
-    {
-        xargs
-            .stdin
-            .unwrap()
-            .write_all(branches.string.as_bytes())
-            .unwrap()
+    // https://git-scm.com/docs/git-branch
+    // With a -d or -D option, <branchname> will be deleted. You may specify more than one branch
+    // for deletion.
+    //
+    // So we can work without xargs.
+    if branches.vec.is_empty() {
+        String::default()
+    } else {
+        let delete_branches_args =
+            branches.vec.iter().fold(vec!["git", "branch", "-D"], |mut acc, b| {
+                acc.push(b);
+                acc
+            });
+        let delete_branches_cmd = run_command(&delete_branches_args);
+        String::from_utf8(delete_branches_cmd.stdout).unwrap()
     }
-
-    let mut branches_delete_result = String::new();
-    xargs
-        .stdout
-        .unwrap()
-        .read_to_string(&mut branches_delete_result)
-        .unwrap();
-    branches_delete_result
 }
 
 pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String {
-    let xargs = spawn_piped(&["xargs", "git", "push", &options.remote, "--delete"]);
 
     let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
@@ -99,16 +87,17 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
         .cloned()
         .collect();
 
-    {
-        xargs
-            .stdin
-            .unwrap()
-            .write_all(intersection.join("\n").as_bytes())
-            .unwrap()
-    }
-
-    let mut stderr = String::new();
-    xargs.stderr.unwrap().read_to_string(&mut stderr).unwrap();
+    let stderr = if intersection.is_empty() {
+        String::default()
+    } else {
+        let delete_branches_args =
+            intersection.iter().fold(vec!["git", "push", &options.remote, "--delete"], |mut acc, b| {
+                acc.push(b);
+                acc
+            });
+        let delete_remote_branches_cmd = run_command(&delete_branches_args);
+        String::from_utf8(delete_remote_branches_cmd.stderr).unwrap()
+    };
 
     // Everything is written to stderr, so we need to process that
     let split = stderr.split('\n');
@@ -131,24 +120,18 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
 
 #[cfg(test)]
 mod test {
-    use super::spawn_piped;
 
-    use std::io::{Read, Write};
+    use regex::Regex;
 
+    // `spawn_piped` was removed so this test is somewhat outdated.
+    // It now tests the match operation for which `grep` was used before.
     #[test]
     fn test_spawn_piped() {
-        let echo = spawn_piped(&["grep", "foo"]);
-
-        {
-            echo.stdin
-                .unwrap()
-                .write_all("foo\nbar\nbaz".as_bytes())
-                .unwrap()
-        }
-
-        let mut stdout = String::new();
-        echo.stdout.unwrap().read_to_string(&mut stdout).unwrap();
-
-        assert_eq!(stdout, "foo\n");
+        let echo = Regex::new("foo\n").unwrap();
+        assert_eq!(echo.captures_iter("foo\nbar\nbaz")
+            .fold(String::new(), |mut acc, e| {
+                acc.push_str(&e[0]);
+                acc
+            }), "foo\n");
     }
 }
