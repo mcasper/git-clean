@@ -1,12 +1,25 @@
 use support::project;
 
+macro_rules! touch_command {
+    ($project:ident, $file_name:literal) => {
+        if cfg!(windows) {
+            format!("cmd /c copy nul {}\\{}", $project.path().display(), $file_name)
+        } else {
+            format!("touch {}", $file_name)
+        }
+    };
+}
+
+
 #[test]
 fn test_git_clean_works_with_merged_branches() {
     let project = project("git-clean_squashed_merges").build().setup_remote();
 
+    let touch_command = touch_command!(project, "file2.txt");
+
     project.batch_setup_commands(&[
         "git checkout -b merged",
-        "touch file2.txt",
+        &touch_command,
         "git add .",
         "git commit -am Merged",
         "git checkout main",
@@ -31,9 +44,11 @@ fn test_git_clean_works_with_merged_branches() {
 fn test_git_clean_works_with_squashed_merges() {
     let project = project("git-clean_squashed_merges").build().setup_remote();
 
+    let touch_command = touch_command!(project, "file2.txt");
+
     project.batch_setup_commands(&[
         "git checkout -b squashed",
-        "touch file2.txt",
+        &touch_command,
         "git add .",
         "git commit -am Squash",
         "git checkout main",
@@ -58,9 +73,11 @@ fn test_git_clean_works_with_squashed_merges() {
 fn test_git_clean_does_not_delete_branches_ahead_of_main() {
     let project = project("git-clean_branch_ahead").build().setup_remote();
 
+    let touch_command = touch_command!(project, "file2.txt");
+
     project.batch_setup_commands(&[
         "git checkout -b ahead",
-        "touch file2.txt",
+        &touch_command,
         "git add .",
         "git commit -am Ahead",
         "git push origin HEAD",
@@ -85,6 +102,9 @@ fn test_git_clean_does_not_delete_branches_ahead_of_main() {
 fn test_git_clean_works_with_squashes_with_flag() {
     let project = project("git-clean_github_squashes").build().setup_remote();
 
+    let touch_squash_command = touch_command!(project, "squash.txt");
+    let touch_new_command = touch_command!(project, "new.txt");
+
     // Github squashes function basically like a normal squashed merge, it creates an entirely new
     // commit in which all your changes live. The biggest challenge of this is that your local
     // branch doesn't have any knowledge of this new commit. So if main gets ahead of your local
@@ -92,15 +112,15 @@ fn test_git_clean_works_with_squashes_with_flag() {
     // this condition.
     project.batch_setup_commands(&[
         "git checkout -b github_squash",
-        "touch squash.txt",
+        &touch_squash_command,
         "git add .",
         "git commit -am Commit",
         "git push origin HEAD",
         "git checkout main",
-        "touch squash.txt",
+        &touch_squash_command,
         "git add .",
         "git commit -am Squash",
-        "touch new.txt",
+        &touch_new_command,
         "git add .",
         "git commit -am Other",
         "git push origin HEAD",
@@ -133,6 +153,9 @@ fn test_git_clean_ignores_squashes_without_flag() {
         .build()
         .setup_remote();
 
+    let touch_squash_command = touch_command!(project, "squash.txt");
+    let touch_new_command = touch_command!(project, "new.txt");
+
     // Github squashes function basically like a normal squashed merge, it creates an entirely new
     // commit in which all your changes live. The biggest challenge of this is that your local
     // branch doesn't have any knowledge of this new commit. So if main gets ahead of your local
@@ -140,15 +163,15 @@ fn test_git_clean_ignores_squashes_without_flag() {
     // this condition.
     project.batch_setup_commands(&[
         "git checkout -b github_squash",
-        "touch squash.txt",
+        &touch_squash_command,
         "git add .",
         "git commit -am Commit",
         "git push origin HEAD",
         "git checkout main",
-        "touch squash.txt",
+        &touch_squash_command,
         "git add .",
         "git commit -am Squash",
-        "touch new.txt",
+        &touch_new_command,
         "git add .",
         "git commit -am Other",
         "git push origin HEAD",

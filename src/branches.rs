@@ -1,7 +1,8 @@
 use commands::*;
 use error::Error;
 use options::*;
-use std::io::{stdin, stdout, Read, Write};
+use regex::Regex;
+use std::io::{stdin, stdout, Write};
 
 pub const COLUMN_SPACER_LENGTH: usize = 30;
 
@@ -32,7 +33,7 @@ impl Branches {
         stdin().read_line(&mut input)?;
 
         match input.to_lowercase().as_ref() {
-            "y\n" | "yes\n" | "\n" => Ok(()),
+            "y\n" | "y\r\n" | "yes\n" | "yes\r\n" | "\n" | "\r\n" => Ok(()),
             _ => Err(Error::ExitEarly),
         }
     }
@@ -42,84 +43,63 @@ impl Branches {
         println!("Updating remote {}", options.remote);
         run_command_with_no_output(&["git", "remote", "update", &options.remote, "--prune"]);
 
-        let merged_branches_regex =
-            format!("\\*{branch}|\\s{branch}", branch = &options.base_branch);
-        let merged_branches_filter = spawn_piped(&["grep", "-vE", &merged_branches_regex]);
+        let merged_branches_regex = format!("^\\*?\\s*{}$", options.base_branch);
+        let merged_branches_filter =  Regex::new(&merged_branches_regex).unwrap();
         let merged_branches_cmd = run_command(&["git", "branch", "--merged"]);
+        let merged_branches_output = std::str::from_utf8(&merged_branches_cmd.stdout).unwrap();
 
-        {
-            merged_branches_filter
-                .stdin
-                .unwrap()
-                .write_all(&merged_branches_cmd.stdout)
-                .unwrap();
-        }
+        let merged_branches = merged_branches_output
+            .lines()
+            .fold(Vec::<String>::new(), |mut acc, line| {
+                if !merged_branches_filter.is_match(line) {
+                    acc.push(line.trim().to_string());
+                }
+                acc
+            });
 
-        let mut merged_branches_output = String::new();
-        merged_branches_filter
-            .stdout
-            .unwrap()
-            .read_to_string(&mut merged_branches_output)
-            .unwrap();
-        let mut merged_branches = merged_branches_output.split('\n').map(|b| b.trim().into());
-
-        let local_branches_regex =
-            format!("\\*{branch}|\\s{branch}", branch = &options.base_branch);
-        let local_branches_filter = spawn_piped(&["grep", "-vE", &local_branches_regex]);
+        let local_branches_regex = format!("^\\*?\\s*{}$", options.base_branch);
+        let local_branches_filter = Regex::new(&local_branches_regex).unwrap();
         let local_branches_cmd = run_command(&["git", "branch"]);
-
-        {
-            local_branches_filter
-                .stdin
-                .unwrap()
-                .write_all(&local_branches_cmd.stdout)
-                .unwrap();
-        }
-
-        let mut local_branches_output = String::new();
-        local_branches_filter
-            .stdout
-            .unwrap()
-            .read_to_string(&mut local_branches_output)
-            .unwrap();
+        let local_branches_output = std::str::from_utf8(&local_branches_cmd.stdout).unwrap();
 
         let local_branches = local_branches_output
-            .split('\n')
-            .map(|b| b.trim().into())
+            .lines()
+            .fold(Vec::<String>::new(), |mut acc, line| {
+                if !local_branches_filter.is_match(line) {
+                    acc.push(line.trim().to_string());
+                }
+                acc
+            })
+            .iter()
             .filter(|branch| !options.ignored_branches.contains(branch))
+            .cloned()
             .collect::<Vec<String>>();
 
-        let remote_branches_regex = format!("(HEAD|{})", &options.base_branch);
-        let remote_branches_filter = spawn_piped(&["grep", "-vE", &remote_branches_regex]);
+        let remote_branches_regex = format!("\\b(HEAD|{})\\b", &options.base_branch);
+        let remote_branches_filter = Regex::new(&remote_branches_regex).unwrap();
         let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
+        let remote_branches_output = std::str::from_utf8(&remote_branches_cmd.stdout).unwrap();
 
-        {
-            remote_branches_filter
-                .stdin
-                .unwrap()
-                .write_all(&remote_branches_cmd.stdout)
-                .unwrap();
-        }
-
-        let mut remote_branches_output = String::new();
-        remote_branches_filter
-            .stdout
-            .unwrap()
-            .read_to_string(&mut remote_branches_output)
-            .unwrap();
-        let mut remote_branches = remote_branches_output.split('\n').map(|b| b.trim().into());
+        let remote_branches = remote_branches_output
+            .lines()
+            .fold(Vec::<String>::new(), |mut acc, line| {
+                if !remote_branches_filter.is_match(line) {
+                    acc.push(line.trim().to_string());
+                }
+                acc
+            });
 
         for branch in local_branches {
             // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
             // way to determine if we want to suggest to delete it.
-            if !remote_branches.any(|b: String| b == format!("{}/{}", &options.remote, branch)) {
+            if !remote_branches.iter().any(|b: &String| *b == format!("{}/{}", &options.remote, branch)) {
                 branches.push(branch.to_owned());
                 continue;
             }
 
             // If it does exist in the remote, check to see if it's listed in git branches --merged. If
             // it is, that means it wasn't merged using Github squashes, and we can suggest it.
-            if merged_branches.any(|b: String| b == branch) {
+            if merged_branches.iter().any(|b: &String| *b == branch) {
                 branches.push(branch.to_owned());
                 continue;
             }

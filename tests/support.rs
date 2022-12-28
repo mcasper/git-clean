@@ -3,6 +3,16 @@ use std::process::{Command, Output};
 use std::{env, str};
 use tempdir::TempDir;
 
+macro_rules! touch_command {
+    ($project:ident, $file_name:literal) => {
+        if cfg!(windows) {
+            format!("cmd /c copy nul {}\\{}", $project.path().display(), $file_name)
+        } else {
+            format!("touch {}", $file_name)
+        }
+    };
+}
+
 pub fn project(name: &str) -> ProjectBuilder {
     ProjectBuilder::new(name)
 }
@@ -26,12 +36,14 @@ impl ProjectBuilder {
             remote: remote_dir,
         };
 
+        let touch_command = touch_command!(project, "test_file.txt");
+
         project.batch_setup_commands(&[
             "git init",
             "git checkout -b main",
             "git config push.default matching",
             "git remote add origin remote",
-            "touch test_file.txt",
+            &touch_command,
             "git add .",
             "git commit -am Init",
         ]);
@@ -93,7 +105,7 @@ impl Project {
         TestCommand::new(&self.path(), command_pieces, path_to_git_clean())
     }
 
-    fn path(&self) -> PathBuf {
+    pub fn path(&self) -> PathBuf {
         self.directory.path().into()
     }
 
@@ -185,10 +197,10 @@ impl TestCommandResult {
 }
 
 fn path_to_git_clean() -> String {
-    let path = Path::new(&env::var_os("CARGO_MANIFEST_DIR").unwrap())
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("target")
         .join("debug")
-        .join("git-clean")
+        .join(if cfg!(windows) { "git-clean.exe" } else { "git-clean" })
         .to_str()
         .unwrap()
         .to_owned();

@@ -1,7 +1,7 @@
 use clap::ArgMatches;
-use commands::{output, run_command, spawn_piped};
+use commands::{output, run_command};
 use error::Error;
-use std::io::{Read, Write};
+use regex::Regex;
 
 const DEFAULT_REMOTE: &str = "origin";
 const DEFAULT_BRANCH: &str = "main";
@@ -77,18 +77,16 @@ impl Options {
     }
 
     fn validate_remote(&self) -> Result<(), Error> {
-        let grep = spawn_piped(&["grep", &self.remote]);
+        let remote_rx = Regex::new(&self.remote).unwrap();
         let remotes = run_command(&["git", "remote"]);
+        let remotes_output = std::str::from_utf8(&remotes.stdout).unwrap();
 
-        {
-            grep.stdin.unwrap().write_all(&remotes.stdout).unwrap();
-        }
-
-        let mut remote_result = String::new();
-        grep.stdout
-            .unwrap()
-            .read_to_string(&mut remote_result)
-            .unwrap();
+        let remote_result = remote_rx
+            .captures_iter(remotes_output)
+            .fold(String::new(), |mut acc, e| {
+                acc.push_str(&e[0]);
+                acc
+            });
 
         if remote_result.is_empty() {
             return Err(Error::InvalidRemote);

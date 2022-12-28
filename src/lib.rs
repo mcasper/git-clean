@@ -2,6 +2,8 @@
 
 extern crate clap;
 
+extern crate regex;
+
 pub mod cli;
 
 use clap::ArgMatches;

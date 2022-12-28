@@ -11,6 +11,7 @@ autotests = false
 
 [dependencies]
 clap = "2.33.1"
+regex = "1.6"
 
 [dev-dependencies]
 tempdir = "0.3"
