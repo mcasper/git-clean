@@ -1,3 +1,8 @@
+## 0.7.0
+
+### Added
+- Windows support - @jsinger67 #31
+
 ## 0.6.0
 
 ### Changes
