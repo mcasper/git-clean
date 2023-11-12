@@ -108,9 +108,8 @@ USAGE:
     git-clean [FLAGS] [OPTIONS]
 
 FLAGS:
-    -d, --delete_unpushed_branches    delete any local branch that is not present on the
-                                      remote. Enable this if you consider that such
-                                      branches have been merged.
+    -d, --delete_unpushed_branches    delete any local branch that is not present on the remote. Use this to speed up
+                                      the checks if such branches should always be considered as merged
     -h, --help                        Prints help information
     -l, --locals                      only delete local branches
     -r, --remotes                     only delete remote branches
