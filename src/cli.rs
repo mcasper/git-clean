@@ -36,6 +36,13 @@ pub fn build_cli() -> App<'static, 'static> {
                 .takes_value(false),
         )
         .arg(
+            Arg::with_name("delete_unpushed_branches")
+                .short("d")
+                .long("delete_unpushed_branches")
+                .help("delete any local branch that is not present on the remote. Enable this if you consider that such branches have been merged.")
+                .takes_value(false),
+        )
+        .arg(
             Arg::with_name("remote")
                 .short("R")
                 .long("remote")

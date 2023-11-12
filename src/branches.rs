@@ -92,7 +92,7 @@ impl Branches {
         for branch in local_branches {
             // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
             // way to determine if we want to suggest to delete it.
-            if !remote_branches.iter().any(|b: &String| *b == format!("{}/{}", &options.remote, branch)) {
+            if options.delete_unpushed_branches && !remote_branches.iter().any(|b: &String| *b == format!("{}/{}", &options.remote, branch)) {
                 branches.push(branch.to_owned());
                 continue;
             }

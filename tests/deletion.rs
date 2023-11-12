@@ -10,7 +10,6 @@ macro_rules! touch_command {
     };
 }
 
-
 #[test]
 fn test_git_clean_works_with_merged_branches() {
     let project = project("git-clean_squashed_merges").build().setup_remote();
@@ -69,8 +68,7 @@ fn test_git_clean_works_with_squashed_merges() {
     );
 }
 
-#[test]
-fn test_git_clean_does_not_delete_branches_ahead_of_main() {
+fn git_clean_does_not_delete_branches_ahead_of_main(flags: &str) {
     let project = project("git-clean_branch_ahead").build().setup_remote();
 
     let touch_command = touch_command!(project, "file2.txt");
@@ -84,7 +82,7 @@ fn test_git_clean_does_not_delete_branches_ahead_of_main() {
         "git checkout main",
     ]);
 
-    let result = project.git_clean_command("-y").run();
+    let result = project.git_clean_command(flags).run();
 
     assert!(
         result.is_success(),
@@ -96,6 +94,62 @@ fn test_git_clean_does_not_delete_branches_ahead_of_main() {
         "{}",
         result.failure_message("command not to delete ahead")
     );
+}
+
+#[test]
+fn test_git_clean_does_not_delete_branches_ahead_of_main() {
+    git_clean_does_not_delete_branches_ahead_of_main("-y")
+}
+
+#[test]
+fn test_git_clean_does_not_delete_branches_ahead_of_main_d_flag() {
+    git_clean_does_not_delete_branches_ahead_of_main("-y -d")
+}
+
+fn git_clean_with_unpushed_ahead_branch(flags: &str, expect_branch_deleted: bool) {
+    let project = project("git-clean_branch_ahead").build().setup_remote();
+
+    let touch_command = touch_command!(project, "file2.txt");
+
+    project.batch_setup_commands(&[
+        "git checkout -b ahead",
+        &touch_command,
+        "git add .",
+        "git commit -am Ahead",
+        "git checkout main",
+    ]);
+
+    let result = project.git_clean_command(flags).run();
+
+    assert!(
+        result.is_success(),
+        "{}",
+        result.failure_message("command to succeed")
+    );
+    if expect_branch_deleted {
+        assert!(
+            result.stdout().contains("Deleted branch ahead"),
+            "{}",
+            result.failure_message("command to delete ahead")
+        );
+    }
+    else {
+        assert!(
+            !result.stdout().contains("Deleted branch ahead"),
+            "{}",
+            result.failure_message("command not to delete ahead")
+        );
+    }
+}
+
+#[test]
+fn test_git_clean_does_not_delete_unpushed_ahead_branch() {
+    git_clean_with_unpushed_ahead_branch("-y", false)
+}
+
+#[test]
+fn test_git_clean_deletes_unpushed_ahead_branch() {
+    git_clean_with_unpushed_ahead_branch("-y -d", true)
 }
 
 #[test]
