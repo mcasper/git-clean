@@ -6,7 +6,11 @@ use tempdir::TempDir;
 macro_rules! touch_command {
     ($project:ident, $file_name:literal) => {
         if cfg!(windows) {
-            format!("cmd /c copy nul {}\\{}", $project.path().display(), $file_name)
+            format!(
+                "cmd /c copy nul {}\\{}",
+                $project.path().display(),
+                $file_name
+            )
         } else {
             format!("touch {}", $file_name)
         }
@@ -200,7 +204,11 @@ fn path_to_git_clean() -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("target")
         .join("debug")
-        .join(if cfg!(windows) { "git-clean.exe" } else { "git-clean" })
+        .join(if cfg!(windows) {
+            "git-clean.exe"
+        } else {
+            "git-clean"
+        })
         .to_str()
         .unwrap()
         .to_owned();

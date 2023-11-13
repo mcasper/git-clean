@@ -3,7 +3,11 @@ use support::project;
 macro_rules! touch_command {
     ($project:ident, $file_name:literal) => {
         if cfg!(windows) {
-            format!("cmd /c copy nul {}\\{}", $project.path().display(), $file_name)
+            format!(
+                "cmd /c copy nul {}\\{}",
+                $project.path().display(),
+                $file_name
+            )
         } else {
             format!("touch {}", $file_name)
         }
@@ -132,8 +136,7 @@ fn git_clean_with_unpushed_ahead_branch(flags: &str, expect_branch_deleted: bool
             "{}",
             result.failure_message("command to delete ahead")
         );
-    }
-    else {
+    } else {
         assert!(
             !result.stdout().contains("Deleted branch ahead"),
             "{}",

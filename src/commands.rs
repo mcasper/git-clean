@@ -7,7 +7,7 @@ use error::Error;
 use options::Options;
 
 pub fn run_command_with_no_output(args: &[&str]) {
-    Command::new(&args[0])
+    Command::new(args[0])
         .args(&args[1..])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -26,11 +26,11 @@ pub fn run_command(args: &[&str]) -> Output {
 }
 
 pub fn run_command_with_result(args: &[&str]) -> Result<Output, IOError> {
-    Command::new(&args[0]).args(&args[1..]).output()
+    Command::new(args[0]).args(&args[1..]).output()
 }
 
 pub fn run_command_with_status(args: &[&str]) -> Result<ExitStatus, IOError> {
-    Command::new(&args[0])
+    Command::new(args[0])
         .args(&args[1..])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -55,17 +55,19 @@ pub fn delete_local_branches(branches: &Branches) -> String {
         String::default()
     } else {
         let delete_branches_args =
-            branches.vec.iter().fold(vec!["git", "branch", "-D"], |mut acc, b| {
-                acc.push(b);
-                acc
-            });
+            branches
+                .vec
+                .iter()
+                .fold(vec!["git", "branch", "-D"], |mut acc, b| {
+                    acc.push(b);
+                    acc
+                });
         let delete_branches_cmd = run_command(&delete_branches_args);
         String::from_utf8(delete_branches_cmd.stdout).unwrap()
     }
 }
 
 pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String {
-
     let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
 
     let s = String::from_utf8(remote_branches_cmd.stdout).unwrap();
@@ -90,11 +92,13 @@ pub fn delete_remote_branches(branches: &Branches, options: &Options) -> String 
     let stderr = if intersection.is_empty() {
         String::default()
     } else {
-        let delete_branches_args =
-            intersection.iter().fold(vec!["git", "push", &options.remote, "--delete"], |mut acc, b| {
+        let delete_branches_args = intersection.iter().fold(
+            vec!["git", "push", &options.remote, "--delete"],
+            |mut acc, b| {
                 acc.push(b);
                 acc
-            });
+            },
+        );
         let delete_remote_branches_cmd = run_command(&delete_branches_args);
         String::from_utf8(delete_remote_branches_cmd.stderr).unwrap()
     };
@@ -128,10 +132,13 @@ mod test {
     #[test]
     fn test_spawn_piped() {
         let echo = Regex::new("foo\n").unwrap();
-        assert_eq!(echo.captures_iter("foo\nbar\nbaz")
-            .fold(String::new(), |mut acc, e| {
-                acc.push_str(&e[0]);
-                acc
-            }), "foo\n");
+        assert_eq!(
+            echo.captures_iter("foo\nbar\nbaz")
+                .fold(String::new(), |mut acc, e| {
+                    acc.push_str(&e[0]);
+                    acc
+                }),
+            "foo\n"
+        );
     }
 }

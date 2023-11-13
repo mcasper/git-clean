@@ -44,18 +44,19 @@ impl Branches {
         run_command_with_no_output(&["git", "remote", "update", &options.remote, "--prune"]);
 
         let merged_branches_regex = format!("^\\*?\\s*{}$", options.base_branch);
-        let merged_branches_filter =  Regex::new(&merged_branches_regex).unwrap();
+        let merged_branches_filter = Regex::new(&merged_branches_regex).unwrap();
         let merged_branches_cmd = run_command(&["git", "branch", "--merged"]);
         let merged_branches_output = std::str::from_utf8(&merged_branches_cmd.stdout).unwrap();
 
-        let merged_branches = merged_branches_output
-            .lines()
-            .fold(Vec::<String>::new(), |mut acc, line| {
-                if !merged_branches_filter.is_match(line) {
-                    acc.push(line.trim().to_string());
-                }
-                acc
-            });
+        let merged_branches =
+            merged_branches_output
+                .lines()
+                .fold(Vec::<String>::new(), |mut acc, line| {
+                    if !merged_branches_filter.is_match(line) {
+                        acc.push(line.trim().to_string());
+                    }
+                    acc
+                });
 
         let local_branches_regex = format!("^\\*?\\s*{}$", options.base_branch);
         let local_branches_filter = Regex::new(&local_branches_regex).unwrap();
@@ -80,19 +81,24 @@ impl Branches {
         let remote_branches_cmd = run_command(&["git", "branch", "-r"]);
         let remote_branches_output = std::str::from_utf8(&remote_branches_cmd.stdout).unwrap();
 
-        let remote_branches = remote_branches_output
-            .lines()
-            .fold(Vec::<String>::new(), |mut acc, line| {
-                if !remote_branches_filter.is_match(line) {
-                    acc.push(line.trim().to_string());
-                }
-                acc
-            });
+        let remote_branches =
+            remote_branches_output
+                .lines()
+                .fold(Vec::<String>::new(), |mut acc, line| {
+                    if !remote_branches_filter.is_match(line) {
+                        acc.push(line.trim().to_string());
+                    }
+                    acc
+                });
 
         for branch in local_branches {
             // First check if the local branch doesn't exist in the remote, it's the cheapest and easiest
             // way to determine if we want to suggest to delete it.
-            if options.delete_unpushed_branches && !remote_branches.iter().any(|b: &String| *b == format!("{}/{}", &options.remote, branch)) {
+            if options.delete_unpushed_branches
+                && !remote_branches
+                    .iter()
+                    .any(|b: &String| *b == format!("{}/{}", &options.remote, branch))
+            {
                 branches.push(branch.to_owned());
                 continue;
             }
