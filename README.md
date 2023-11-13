@@ -104,18 +104,23 @@ brew install git-clean
 Verify that it works!:
 ```shell
 $ git-clean -h
-Usage: git-clean [options]
+USAGE:
+    git-clean [FLAGS] [OPTIONS]
 
-Options:
-    -l, --locals        only delete local branches
-    -r, --remotes       only delete remote branches
-    -y, --yes           skip the check for deleting branches
-    -s, --squashes      check for squashes by finding branches incompatible with main
-    -R, --remote REMOTE changes the git remote used (default is origin)
-    -b, --branch BRANCH changes the base for merged branches (default is
-                        main)
-    -h, --help          print this help menu
-    -v, --version       print the version
+FLAGS:
+    -d, --delete_unpushed_branches    delete any local branch that is not present on the remote. Use this to speed up
+                                      the checks if such branches should always be considered as merged
+    -h, --help                        Prints help information
+    -l, --locals                      only delete local branches
+    -r, --remotes                     only delete remote branches
+    -s, --squashes                    check for squashes by finding branches incompatible with main
+    -V, --version                     Prints version information
+    -y, --yes                         skip the check for deleting branches
+
+OPTIONS:
+    -b, --branch <branch>       changes the base for merged branches (default is main)
+    -i, --ignore <ignore>...    ignore given branches
+    -R, --remote <remote>       changes the git remote used (default is origin)
 ```
 
 # Updating

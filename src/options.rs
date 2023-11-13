@@ -40,6 +40,7 @@ pub struct Options {
     pub remote: String,
     pub base_branch: String,
     pub squashes: bool,
+    pub delete_unpushed_branches: bool,
     pub ignored_branches: Vec<String>,
     pub delete_mode: DeleteMode,
 }
@@ -56,6 +57,7 @@ impl Options {
             base_branch: opts.value_of("branch").unwrap_or(DEFAULT_BRANCH).into(),
             ignored_branches: ignored,
             squashes: opts.is_present("squashes"),
+            delete_unpushed_branches: opts.is_present("delete_unpushed_branches"),
             delete_mode: DeleteMode::new(opts),
         }
     }
@@ -169,10 +171,12 @@ mod test {
         assert_eq!("main".to_owned(), git_options.base_branch);
         assert_eq!("upstream".to_owned(), git_options.remote);
         assert!(!git_options.squashes);
+        assert!(!git_options.delete_unpushed_branches);
 
-        let matches = parse_args(vec!["git-clean", "-R", "upstream", "--squashes"]);
+        let matches = parse_args(vec!["git-clean", "-R", "upstream", "--squashes", "--delete_unpushed_branches"]);
         let git_options = Options::new(&matches);
 
         assert!(git_options.squashes);
+        assert!(git_options.delete_unpushed_branches);
     }
 }
