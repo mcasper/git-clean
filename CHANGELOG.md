@@ -1,3 +1,8 @@
+## 0.8.0
+
+### Changes
+- Don't delete unpushed branches by default - by @tpilewicz
+
 ## 0.7.0
 
 ### Added
