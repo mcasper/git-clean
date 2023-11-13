@@ -57,7 +57,7 @@ impl Options {
             base_branch: opts.value_of("branch").unwrap_or(DEFAULT_BRANCH).into(),
             ignored_branches: ignored,
             squashes: opts.is_present("squashes"),
-            delete_unpushed_branches: opts.is_present("delete_unpushed_branches"),
+            delete_unpushed_branches: opts.is_present("delete-unpushed-branches"),
             delete_mode: DeleteMode::new(opts),
         }
     }
@@ -83,12 +83,13 @@ impl Options {
         let remotes = run_command(&["git", "remote"]);
         let remotes_output = std::str::from_utf8(&remotes.stdout).unwrap();
 
-        let remote_result = remote_rx
-            .captures_iter(remotes_output)
-            .fold(String::new(), |mut acc, e| {
-                acc.push_str(&e[0]);
-                acc
-            });
+        let remote_result =
+            remote_rx
+                .captures_iter(remotes_output)
+                .fold(String::new(), |mut acc, e| {
+                    acc.push_str(&e[0]);
+                    acc
+                });
 
         if remote_result.is_empty() {
             return Err(Error::InvalidRemote);
@@ -173,10 +174,32 @@ mod test {
         assert!(!git_options.squashes);
         assert!(!git_options.delete_unpushed_branches);
 
-        let matches = parse_args(vec!["git-clean", "-R", "upstream", "--squashes", "--delete_unpushed_branches"]);
+        let matches = parse_args(vec![
+            "git-clean",
+            "-R",
+            "upstream",
+            "--squashes",
+            "--delete-unpushed-branches",
+        ]);
         let git_options = Options::new(&matches);
 
         assert!(git_options.squashes);
         assert!(git_options.delete_unpushed_branches);
+
+        let matches = parse_args(vec![
+            "git-clean",
+            "-i",
+            "branch1",
+            "-i",
+            "branch2",
+            "-i",
+            "branch3",
+        ]);
+        let git_options = Options::new(&matches);
+
+        assert_eq!(
+            git_options.ignored_branches,
+            vec!["branch1", "branch2", "branch3"]
+        );
     }
 }

@@ -1,7 +1,9 @@
-git-clean
-===========
+# git-clean
+
 [![Build Status](https://travis-ci.org/mcasper/git-clean.svg?branch=master)](https://travis-ci.org/mcasper/git-clean)
+
 # The Problem
+
 If you work on one project for a long time, you're bound to amass a good number
 of branches. Deleting these branches locally whenever you're done with them
 gets annoying, and can cost you a lot of time in branch grooming, or trying to
@@ -11,6 +13,7 @@ remember 'that command' to delete all merged branches locally.
 your merged branches quickly and easily.
 
 # Other implementations
+
 There are a couple other tools out there like this, but they all fall short for
 me in some way.
 
@@ -33,12 +36,13 @@ branches in one go.
 https://github.com/dstnbrkr/git-trim
 
 This tool does something reminiscent of interactive rebasing, it will display
-*all* of your branches in your text editor, let you choose which ones you want
-to delete, and deletes them upon saving.  My problems with this are: It's a
+_all_ of your branches in your text editor, let you choose which ones you want
+to delete, and deletes them upon saving. My problems with this are: It's a
 manual process - and, - It doesn't only display merged branches, meaning that
 you could delete branches that have valuable work on it.
 
 # Advantages to this project
+
 - Fast
 
 This project is written in Rust, which is [really stinkin
@@ -71,6 +75,7 @@ UI, which is a really handy tool to avoid manually rebasing all the time.
 and will make sure they get cleaned out of your local repo.
 
 # Assumptions
+
 This tool assumes (but will also check) that your `git` is properly configured
 to push and pull from the current repository. `git-clean` should be run from
 the directory that holds the `.git` directory you care about.
@@ -81,58 +86,69 @@ and `push` on your system. `git push` will only ever be run as `git push
 isn't acceptable, use the `-l` flag to only delete branches locally.
 
 # Installation
+
 If you're a Rust developer, you can install using Cargo:
+
 ```shell
 cargo install git-clean
 ```
+
 This was developed on Rust 1.14.0 stable, so if you're having issues with the
 compile/install step, make sure your Rust version is >= 1.14.0 stable.
 
 Be sure to add the installation path to your PATH variable. For me, it's
 downloaded to:
+
 ```
 /Users/mattcasper/.multirust/toolchains/stable/cargo/bin/git-clean
 ```
 
 If you're not a Rust developer, or just prefer another way, there's also
 a homebrew formula:
+
 ```shell
 brew tap mcasper/formulae
 brew install git-clean
 ```
 
 Verify that it works!:
+
 ```shell
 $ git-clean -h
 USAGE:
     git-clean [FLAGS] [OPTIONS]
 
 FLAGS:
-    -d, --delete_unpushed_branches    delete any local branch that is not present on the remote. Use this to speed up
+    -d, --delete-unpushed-branches    Delete any local branch that is not present on the remote. Use this to speed up
                                       the checks if such branches should always be considered as merged
     -h, --help                        Prints help information
-    -l, --locals                      only delete local branches
-    -r, --remotes                     only delete remote branches
-    -s, --squashes                    check for squashes by finding branches incompatible with main
+    -l, --locals                      Only delete local branches
+    -r, --remotes                     Only delete remote branches
+    -s, --squashes                    Check for squashes by finding branches incompatible with main
     -V, --version                     Prints version information
-    -y, --yes                         skip the check for deleting branches
+    -y, --yes                         Skip the check for deleting branches
 
 OPTIONS:
-    -b, --branch <branch>       changes the base for merged branches (default is main)
-    -i, --ignore <ignore>...    ignore given branches
-    -R, --remote <remote>       changes the git remote used (default is origin)
+    -b, --branch <branch>       Changes the base for merged branches (default is main)
+    -i, --ignore <ignore>...    Ignore given branch (repeat option for multiple branches)
+    -R, --remote <remote>       Changes the git remote used (default is origin)
 ```
 
 # Updating
+
 If you're updating from an older version of git-clean, and using Cargo to
 install, just run the install command with `--force`:
+
 ```shell
 cargo install git-clean --force
 ```
 
 # Use
+
 ## git-clean
+
 Lists all the branches to be deleted, and prompts you to confirm:
+
 ```shell
 $ git-clean
 The following branches will be deleted locally and remotely:
@@ -143,6 +159,7 @@ Continue? (Y/n)
 ```
 
 If accepted, it will delete the listed branches both locally and remotely:
+
 ```shell
 Continue? (Y/n) y
 
@@ -155,19 +172,21 @@ Remote:
  Deleted branch branch2 (was 3a9ea97).
  Deleted branch branch3 (was 3a9ea97).
 ```
+
 Branches that are already deleted in the remote are filtered out from the
 output.
 
 It also offers several options for tweaking what branches get deleted, where.
 
-* `-l` and `-r` toggle deleting branches only locally or only remotely
-* `-R` changes the git remote that remote branches are deleted in
-* `-b` changes the base branch for finding merged branches to delete
+- `-l` and `-r` toggle deleting branches only locally or only remotely
+- `-R` changes the git remote that remote branches are deleted in
+- `-b` changes the base branch for finding merged branches to delete
 
 And other miscellaneous options:
 
-* `-y` overrides the delete branches check. Nice for automating workflows where
+- `-y` overrides the delete branches check. Nice for automating workflows where
   you don't want to be prompted.
 
 # Contributions
+
 PRs and issues welcome!
